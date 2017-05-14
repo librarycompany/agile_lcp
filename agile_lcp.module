@@ -11,7 +11,7 @@ function agile_lcp_menu() {
       'page arguments' => array('agile_lcp_harvest_form'),
       'type' => MENU_NORMAL_ITEM,
       'file' => 'includes/harvest_form.inc',
-      'access arguments' => array('access content'),
+      'access arguments' => array('ingest fedora objects'),
     ),
   );
 }
