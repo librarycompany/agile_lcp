@@ -1,0 +1,6 @@
+name = Agile LCP Customizations
+description = Custom code from Agile
+package = Agile Humanities
+dependencies[] = islandora
+version = 7.x-dev
+core = 7.x

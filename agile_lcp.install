@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * Implements hook_install().
+ *
+ * @see islandora_basic_collection_islandora_required_objects()
+ */
+function agile_lcp_install() {
+  module_load_include('inc', 'islandora', 'includes/solution_packs');
+  islandora_install_solution_pack('agile_lcp');
+}
+
+function agile_lcp_schema() {
+  $schema['resumption_token'] = array(
+    'description' => 'Table that stores saved configuration names.',
+    'fields' => array(
+      'token_id' => array(
+        'description' => 'Unique ID given to each token',
+        'type' => 'serial',
+        'length' => 11,
+        'not null' => TRUE,
+      ),
+      'token' => array(
+        'description' => 'redemption token ',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'processed' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('token_id'),
+  );
+  return $schema;
+}
