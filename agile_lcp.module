@@ -22,40 +22,40 @@ function agile_lcp_menu() {
   function agile_lcp_islandora_required_objects(IslandoraTuque $connection) {
     $module_path = drupal_get_path('module', 'agile_lcp');
     // IDOA Import Content Model
-    $doa_content_model = $connection->repository->constructObject('islandora:oai_importCModel');
-    $doa_content_model->owner = 'fedoraAdmin';
-    $doa_content_model->label = 'Agile OAI Import Content Model';
-    $doa_content_model->models = 'fedora-system:ContentModel-3.0';
+    $oai_content_model = $connection->repository->constructObject('islandora:oai_importCModel');
+    $oai_content_model->owner = 'fedoraAdmin';
+    $oai_content_model->label = 'Agile OAI Import Content Model';
+    $oai_content_model->models = 'fedora-system:ContentModel-3.0';
     // DS-COMPOSITE-MODEL Datastream.
-    $datastream = $doa_content_model->constructDatastream('DS-COMPOSITE-MODEL', 'X');
+    $datastream = $oai_content_model->constructDatastream('DS-COMPOSITE-MODEL', 'X');
     $datastream->label = 'DS-COMPOSITE-MODEL';
     $datastream->mimetype = 'application/xml';
     $datastream->setContentFromFile("$module_path/xml/islandora_OAI_importCmodel_ds_composite_model.xml", FALSE);
-    $doa_content_model->ingestDatastream($datastream);
+    $oai_content_model->ingestDatastream($datastream);
     // Image Collection.
-    $doa_collection = $connection->repository->constructObject('islandora:imported_doa');
-    $doa_collection->owner = 'fedoraAdmin';
-    $doa_collection->label = 'Imported from OAI';
-    $doa_collection->models = 'islandora:collectionCModel';
-    $doa_collection->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:root');
+    $oai_collection = $connection->repository->constructObject('islandora:imported_oai');
+    $oai_collection->owner = 'fedoraAdmin';
+    $oai_collection->label = 'Imported from OAI';
+    $oai_collection->models = 'islandora:collectionCModel';
+    //$oai_collection->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:root');
     // Collection Policy Datastream.
-    $datastream = $doa_collection->constructDatastream('COLLECTION_POLICY', 'X');
+    $datastream = $oai_collection->constructDatastream('COLLECTION_POLICY', 'X');
     $datastream->label = 'Collection policy';
     $datastream->mimetype = 'application/xml';
     $datastream->setContentFromFile("$module_path/xml/agile_doa_import_collection_policy.xml", FALSE);
-    $doa_collection->ingestDatastream($datastream);
+    $oai_collection->ingestDatastream($datastream);
     // TN Datastream.
-    $datastream = $doa_collection->constructDatastream('TN', 'M');
+    $datastream = $oai_collection->constructDatastream('TN', 'M');
     $datastream->label = 'Thumbnail';
     $datastream->mimetype = 'image/png';
     $datastream->setContentFromFile("$module_path/images/folder.png", FALSE);
-    $doa_collection->ingestDatastream($datastream);
+    $oai_collection->ingestDatastream($datastream);
     return array(
       'agile_lcp' => array(
         'title' => 'OAI IMport',
         'objects' => array(
-          $doa_content_model,
-          $doa_collection,
+          $oai_content_model,
+          $oai_collection,
         ),
       ),
     );
