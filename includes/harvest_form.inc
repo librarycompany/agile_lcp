@@ -27,7 +27,6 @@ function agile_lcp_harvest_form($form, &$form_state) {
   return $form;
 }
 
-
 function agile_cp_create_objects($identifiers) {
   foreach ($identifiers as $identifier) {
     agile_lcp_build_object($identifier);
@@ -44,8 +43,14 @@ function agile_lcp_build_object($identifier) {
   $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:imported_doa');
   $dom = new DOMDocument();
   $dom->loadXML($streams['MODS']);
+  $non_sort = '';
+  $nonSort_nodes = $dom->getElementsByTagName('nonSort');
+  if ($nonSort_nodes->length > 0) {
+    $non_sort = $nonSort_nodes->item(0)->nodeValue . ' ';
+  }
   $title = $dom->getElementsByTagName('title')->item(0)->nodeValue;
-  $object->label = $dom->getElementsByTagName('title')->item(0)->nodeValue;
+  $label = $non_sort . $title;
+  $object->label = $label;
   foreach ($streams as $dsid => $content) {
     $type = ($dsid == 'DC') ? 'X' : 'M';
     $mine = ($dsid == 'DC') ? 'text/xml' : 'application/xml';
@@ -58,7 +63,6 @@ function agile_lcp_build_object($identifier) {
   }
   islandora_add_object($object);
 }
-
 
 function agile_lcp_harvest_form_submit($form, &$form_state) {
 
@@ -79,6 +83,7 @@ function agile_lcp_harvest_form_submit($form, &$form_state) {
 }
 
 function agile_lcp_import_doa() {
+  set_time_limit(480);
   module_load_include('inc', 'agile_lcp', 'includes/db');
   $token = agile_lcp_get_last_token();
   if ($token) {
