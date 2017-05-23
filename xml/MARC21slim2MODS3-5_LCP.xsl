@@ -2909,7 +2909,7 @@
                 </recordIdentifier>
             </xsl:for-each>
 
-            <recordOrigin>Imported From DOI</recordOrigin>
+            <recordOrigin>Imported From OAI</recordOrigin>
 
             <xsl:for-each select="marc:datafield[@tag=040]/marc:subfield[@code='b']">
                 <languageOfCataloging>
