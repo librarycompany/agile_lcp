@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Defines the form that allows users to harvest.
@@ -17,17 +18,30 @@
  */
 function agile_lcp_harvest_form($form, &$form_state) {
   module_load_include('inc', 'agile_lcp', 'includes/db');
-  $token = agile_lcp_get_last_token_id();
+  $token_count = db_select('resumption_token')
+      ->fields(NULL, array('field'))
+      ->condition('processed', 0)
+      ->countQuery()->execute()->fetchField();
+  
+  $intro = t("There are @count tokens to process", array('@count' => $token_count));
+  $token = agile_lcp_get_next_token_id();
   if (!$token) {
-    $token = t('No tokens processed yet');
+    $message = t('No tokens processed yet');
   }
   else {
-    $token = t('Next token ID to process is @token', array('@token' => $token));
+    $message = t('Next token ID to process is @token', array('@token' => $token));
   }
   $form = array();
   $form['info'] = array(
     '#type' => 'markup',
-    '#markup' => $token,
+    '#markup' => "<p>$intro</p><p>$message</p>",
+  );
+
+  $form['is_new'] = array(
+    '#title' => t("First run?"),
+    '#type' => 'checkbox',
+    '#default_value' => 0,
+    '#access' => $token == 1,
   );
   $form['process'] = array(
     '#type' => 'textfield',
@@ -43,7 +57,42 @@ function agile_lcp_harvest_form($form, &$form_state) {
 }
 
 /**
- * BUilds Islandora objects from OAI input.
+ * Submit handler.
+ *
+ * @param array $form
+ *   Drupal form
+ * @param array $form_state
+ *   Drupal form state
+ */
+function agile_lcp_harvest_form_submit($form, &$form_state) {
+  $iterations = $form_state['values']['process'];
+  $batch = array(
+    'title' => t('Importing records'),
+    'operations' => array(),
+    'file' => drupal_get_path('module', 'agile_lcp') . '/includes/harvest_form.inc',
+    'progress_message' => t('@current of @total operations completed.'),
+  );
+
+  if (isset($form_state['values']['is_new']) && $form_state['values']['is_new']) {
+    $batch['operations'][] = array('agile_lcp_import_oai', array(
+        'token_id' => NULL,
+        'token' => NULL,
+    ));
+    $iterations--;
+  }
+  $tokens = agile_lcp_get_unproccessed_tokens($iterations);
+  foreach ($tokens as $id => $redemption_token) {
+    $batch['operations'][] = array('agile_lcp_import_oai', array(
+        'token_id' => $id,
+        'token' => $redemption_token,
+    ));
+  }
+  batch_set($batch);
+  batch_process();
+}
+
+/**
+ * Builds Islandora objects from OAI input.
  *
  * @param string $identifier
  *   OAI unique indentifier
@@ -80,36 +129,10 @@ function agile_lcp_build_object($identifier) {
 }
 
 /**
- * Submit handler.
- *
- * @param array $form
- *   Drupal form
- * @param array $form_state
- *   Drupal form state
- */
-function agile_lcp_harvest_form_submit($form, &$form_state) {
-  $iterations = $form_state['values']['process'];
-  $batch = array(
-    'title' => t('Importing records'),
-    'operations' => array(),
-    'file' => drupal_get_path('module', 'agile_lcp') . '/includes/harvest_form.inc',
-    'progress_message' => t('@current of @total operations completed.'),
-  );
-
-  for ($i = 0; $i < $iterations; $i++) {
-
-    $batch['operations'][] = array('agile_lcp_import_oai', array());
-  }
-  batch_set($batch);
-  batch_process();
-}
-
-/**
  * Initiates batch.
  */
-function agile_lcp_import_oai() {
+function agile_lcp_import_oai($token_id = FALSE, $token = FALSE) {
   module_load_include('inc', 'agile_lcp', 'includes/db');
-  $token = agile_lcp_get_last_token();
   if ($token) {
     $url = "http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&resumptionToken=$token";
   }
@@ -119,12 +142,6 @@ function agile_lcp_import_oai() {
   $input = file_get_contents($url);
   $dom = new DOMDocument();
   $dom->loadXML($input);
-  $resumption_node = $dom->getElementsByTagName('resumptionToken')->item(0);
-  $resumption_token = $resumption_node->nodeValue;
-  if ($resumption_token) {
-    agile_lcp_add_token($resumption_token);
-  }
-
   $new_identifiers = $dom->getElementsByTagName('identifier');
   foreach ($new_identifiers as $new_identifier) {
     $identifiers[] = $new_identifier->nodeValue;
@@ -141,9 +158,8 @@ function agile_lcp_import_oai() {
       ),
     );
   }
-  $batch2['operations'][] = array('agile_lcp_update_token', array(
-      'token' => $token,
-    )
-  );
+  if ($token) {
+    agile_lcp_update_token($token);
+  }
   batch_set($batch2);
 }

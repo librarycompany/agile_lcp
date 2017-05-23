@@ -43,10 +43,6 @@ function build_full_dom($url) {
   return $tokens;
 }
 
-//module_load_include('inc','agile_lcp','includes/utilities');
-//$url = 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21';
-//build_full_dom($url);
-
 function get_streams_from_entry($identifier) {
   module_load_include('inc', 'islandora_marcxml', 'includes/utilities');
   $url = "http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=GetRecord&identifier=$identifier&metadataPrefix=marc21";
@@ -94,3 +90,4 @@ function agile_lcp_run_xsl_transform($info) {
 
   return @$processor->transformToXML($input);
 }
+
