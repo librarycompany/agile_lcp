@@ -5,7 +5,7 @@
  */
 function agile_lcp_menu() {
   return array(
-    'agile/harvest/doa' => array(
+    'agile/harvest/oai' => array(
       'title' => 'Harvest from OAI',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('agile_lcp_harvest_form'),
@@ -21,7 +21,7 @@ function agile_lcp_menu() {
    */
   function agile_lcp_islandora_required_objects(IslandoraTuque $connection) {
     $module_path = drupal_get_path('module', 'agile_lcp');
-    // IDOA Import Content Model
+    // IOA Import Content Model
     $oai_content_model = $connection->repository->constructObject('islandora:oai_importCModel');
     $oai_content_model->owner = 'fedoraAdmin';
     $oai_content_model->label = 'Agile OAI Import Content Model';
@@ -42,7 +42,7 @@ function agile_lcp_menu() {
     $datastream = $oai_collection->constructDatastream('COLLECTION_POLICY', 'X');
     $datastream->label = 'Collection policy';
     $datastream->mimetype = 'application/xml';
-    $datastream->setContentFromFile("$module_path/xml/agile_doa_import_collection_policy.xml", FALSE);
+    $datastream->setContentFromFile("$module_path/xml/agile_oai_import_collection_policy.xml", FALSE);
     $oai_collection->ingestDatastream($datastream);
     // TN Datastream.
     $datastream = $oai_collection->constructDatastream('TN', 'M');

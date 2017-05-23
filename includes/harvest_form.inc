@@ -1,5 +1,20 @@
 <?php
+/**
+ * @file
+ * Defines the form that allows users to harvest.
+ */
 
+/**
+ * Defines the form that allows users to harvest.
+ *
+ * @param array $form
+ *   The Drupal form definition.
+ * @param array $form_state
+ *   The Drupal form state.
+ *
+ * @return array
+ *   The Drupal form definition.
+ */
 function agile_lcp_harvest_form($form, &$form_state) {
   module_load_include('inc', 'agile_lcp', 'includes/db');
   $token = agile_lcp_get_last_token_id();
@@ -17,24 +32,30 @@ function agile_lcp_harvest_form($form, &$form_state) {
   $form['process'] = array(
     '#type' => 'textfield',
     '#size' => 10,
-    '#title' => 'Import from DOA',
+    '#title' => 'Import from OAI',
     '#description' => t('Number of tokens to process'),
   );
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t("Import via DOA"),
+    '#value' => t("Import via OAI"),
   );
   return $form;
 }
 
+/**
+ * BUilds Islandora objects from OAI input.
+ *
+ * @param string $identifier
+ *   OAI unique indentifier
+ */
 function agile_lcp_build_object($identifier) {
   module_load_include('inc', 'agile_lcp', 'includes/utilities');
   $streams = get_streams_from_entry($identifier);
   $tuque = new IslandoraTuque();
   $repository = $tuque->repository;
   $object = $repository->constructObject('islandora');
-  $object->relationships->add(FEDORA_MODEL_URI, 'hasModel', 'islandora:doa_importCModel');
-  $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:imported_doa');
+  $object->relationships->add(FEDORA_MODEL_URI, 'hasModel', 'islandora:oai_importCModel');
+  $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:imported_oai');
   $dom = new DOMDocument();
   $dom->loadXML($streams['MODS']);
   $non_sort = '';
@@ -58,8 +79,15 @@ function agile_lcp_build_object($identifier) {
   islandora_add_object($object);
 }
 
+/**
+ * Submit handler.
+ *
+ * @param array $form
+ *   Drupal form
+ * @param array $form_state
+ *   Drupal form state
+ */
 function agile_lcp_harvest_form_submit($form, &$form_state) {
-
   $iterations = $form_state['values']['process'];
   $batch = array(
     'title' => t('Importing records'),
@@ -70,13 +98,16 @@ function agile_lcp_harvest_form_submit($form, &$form_state) {
 
   for ($i = 0; $i < $iterations; $i++) {
 
-    $batch['operations'][] = array('agile_lcp_import_doa', array());
+    $batch['operations'][] = array('agile_lcp_import_oai', array());
   }
   batch_set($batch);
   batch_process();
 }
 
-function agile_lcp_import_doa() {
+/**
+ * Initiates batch.
+ */
+function agile_lcp_import_oai() {
   module_load_include('inc', 'agile_lcp', 'includes/db');
   $token = agile_lcp_get_last_token();
   if ($token) {
