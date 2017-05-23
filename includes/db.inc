@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Adds new token to database
+ * 
+ * @param string $token
+ *   token to add.
+ */
 function agile_lcp_add_token($token) {
   $nid = db_insert('resumption_token')
       ->fields(array(
@@ -9,6 +15,12 @@ function agile_lcp_add_token($token) {
       ->execute();
 }
 
+/**
+ * Get most unprocessed token id
+ *
+ * @return integer
+ *   token id
+ */
 function agile_lcp_get_last_token_id() {
   $query = db_select('resumption_token', 'rt')
       ->condition('processed', 0);
@@ -17,6 +29,12 @@ function agile_lcp_get_last_token_id() {
   return $token_id;
 }
 
+/**
+ * Get last unproccessed token
+ *
+ * @return string
+ *   token
+ */
 function agile_lcp_get_last_token() {
   $query = db_select('resumption_token', 'rt')
       ->condition('processed', 0)
@@ -27,6 +45,15 @@ function agile_lcp_get_last_token() {
   return $token;
 }
 
+/**
+ * Get token from id.
+ *
+ * @param integer $token_id
+ *   token_id
+ * 
+ * @return string
+ *   token
+ */
 function agile_lcp_get_token_from_id($token_id) {
   $query = db_select('resumption_token', 'rt')
       ->fields('rt', array('token'))
@@ -36,6 +63,11 @@ function agile_lcp_get_token_from_id($token_id) {
   return $token;
 }
 
+/**
+ * Marks token as processed.
+ *
+ * @param string $token
+ */
 function agile_lcp_update_token($token) {
   $query = db_update('resumption_token')
           ->condition('token', $token)

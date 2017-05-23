@@ -27,12 +27,6 @@ function agile_lcp_harvest_form($form, &$form_state) {
   return $form;
 }
 
-function agile_cp_create_objects($identifiers) {
-  foreach ($identifiers as $identifier) {
-    agile_lcp_build_object($identifier);
-  }
-}
-
 function agile_lcp_build_object($identifier) {
   module_load_include('inc', 'agile_lcp', 'includes/utilities');
   $streams = get_streams_from_entry($identifier);
@@ -83,7 +77,6 @@ function agile_lcp_harvest_form_submit($form, &$form_state) {
 }
 
 function agile_lcp_import_doa() {
-  set_time_limit(480);
   module_load_include('inc', 'agile_lcp', 'includes/db');
   $token = agile_lcp_get_last_token();
   if ($token) {
@@ -105,6 +98,21 @@ function agile_lcp_import_doa() {
   foreach ($new_identifiers as $new_identifier) {
     $identifiers[] = $new_identifier->nodeValue;
   }
-  agile_cp_create_objects($identifiers);
-  agile_lcp_update_token($token);
+  $batch2 = array(
+    'title' => t('Building Islandora Objects'),
+    'operations' => array(),
+    'file' => drupal_get_path('module', 'agile_lcp') . '/includes/harvest_form.inc',
+    'progress_message' => t('@current of @total operations completed.'),
+  );
+  foreach ($identifiers as $identifier) {
+    $batch2['operations'][] = array('agile_lcp_build_object', array(
+        'identifier' => $identifier
+      ),
+    );
+  }
+  $batch2['operations'][] = array('agile_lcp_update_token', array(
+      'token' => $token,
+    )
+  );
+  batch_set($batch2);
 }
