@@ -19,10 +19,10 @@
 function agile_lcp_harvest_form($form, &$form_state) {
   module_load_include('inc', 'agile_lcp', 'includes/db');
   $token_count = db_select('resumption_token')
-      ->fields(NULL, array('field'))
-      ->condition('processed', 0)
-      ->countQuery()->execute()->fetchField();
-  
+          ->fields(NULL, array('field'))
+          ->condition('processed', 0)
+          ->countQuery()->execute()->fetchField();
+
   $intro = t("There are @count tokens to process", array('@count' => $token_count));
   $token = agile_lcp_get_next_token_id();
   if (!$token) {
@@ -159,7 +159,23 @@ function agile_lcp_import_oai($token_id = FALSE, $token = FALSE) {
     );
   }
   if ($token) {
-    agile_lcp_update_token($token);
+    $batch2['operations'][] = array('agile_lcp_mark_token', array(
+        'token' => $token,
+      )
+    );
   }
   batch_set($batch2);
+}
+
+/**
+ * Marks token as processed.
+ *
+ * @param string $token
+ */
+function agile_lcp_mark_token($token) {
+  $query = db_update('resumption_token')
+          ->condition('token', $token)
+          ->fields(array(
+            'processed' => 1,
+          ))->execute();
 }
