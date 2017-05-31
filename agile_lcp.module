@@ -68,3 +68,181 @@ function agile_lcp_islandora_required_objects(IslandoraTuque $connection) {
     ),
   );
 }
+
+/**
+ * Implements hook_islandora_solr_results_alter().
+ */
+function agile_lcp_islandora_solr_results_alter(&$search_results, $query_processor) {
+  foreach ($search_results as &$result) {
+    if ($result['solr_doc']) {
+      if (in_array('info:fedora/islandora:oai_importCModel', $result['content_models'])) {
+        $identifier = $result['solr_doc']['mods_recordInfo_recordIdentifier_s'];
+        $result['solr_doc']['mods_recordInfo_recordIdentifier_s'] = l($identifier, "http://pacscl.exlibrisgroup.com:48992/F?func=direct&doc_number=$identifier");
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function agile_lcp_form_islandora_solr_simple_search_form_alter(&$form, &$form_state, $form_id) {
+  $options = array(
+    'all' => t("All"),
+    'digital' => t("Digital Collections"),
+    'catalog' => t('Book Catalog'),
+  );
+  $form['search_choice'] = array(
+    '#weight' => -10,
+    '#type' => 'select',
+    '#options' => $options,
+  );
+
+  $form['#submit'] = array('agile_lcp_simple_search_submit');
+}
+
+/**
+ * Altered submit form for Islandora Simple Search
+ */
+function agile_lcp_simple_search_submit($form, &$form_state) {
+  module_load_include('inc', 'islandora_solr', 'includes/utilities');
+  $search_string = islandora_solr_replace_slashes($form_state['values']['islandora_simple_search_query']);
+  switch ($form_state['values']['search_choice']) {
+    case 'digital':
+      $filter_val = '-RELS_EXT_hasModel_uri_s:"info\:fedora\/islandora\:oai_importCModel"';
+      break;
+
+    case 'catalog':
+      $filter_val = 'RELS_EXT_hasModel_uri_s:"info\:fedora\/islandora\:oai_importCModel"';
+      break;
+
+    default;
+      $filter_val = NULL;
+  }
+  $query = array('type' => 'edismax');
+  if ($filter_val) {
+    $query['f'] = array($filter_val);
+  }
+  $form_state['redirect'] = array(
+    "islandora/search/$search_string",
+    array(
+      'query' => $query,
+    ),
+  );
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function agile_lcp_form_islandora_solr_advanced_search_form_alter(&$form, &$form_state, $form_id) {
+  $options = array(
+    'all' => t("All"),
+    'digital' => t("Digital Collections"),
+    'catalog' => t('Book Catalog'),
+  );
+  $form['search_choice'] = array(
+    '#weight' => -10,
+    '#type' => 'select',
+    '#options' => $options,
+  );
+
+  $form['#submit'] = array('agile_lcp_advanced_search_submit');
+}
+
+/**
+ * Islandora Solr advanced search form submit callback.
+ *
+ * @param array $form
+ *   An associative array containing form structure.
+ * @param array $form_state
+ *   An associative array containing form state.
+ *
+ * @see islandora_solr_advanced_search_form()
+ */
+function agile_lcp_advanced_search_submit($form, &$form_state) {
+  module_load_include('inc', 'islandora_solr', 'includes/utilities');
+
+  // Collect query values.
+  $query_array = array();
+
+  // Get Lucene syntax escaping configuration, prior to the following
+  // foreach loop.
+  $lucene_syntax_escape = variable_get('islandora_solr_advanced_search_block_lucene_syntax_escape', FALSE);
+  $lucene_regex = variable_get(
+      'islandora_solr_advanced_search_block_lucene_regex_default', ISLANDORA_SOLR_QUERY_FACET_LUCENE_ESCAPE_REGEX_DEFAULT
+  );
+
+  foreach ($form_state['values']['terms'] as $term) {
+    $field = islandora_solr_lesser_escape($term['field']);
+    $search = trim($term['search']);
+
+    $boolean = (isset($term['boolean'])) ? $term['boolean'] : variable_get('islandora_solr_search_boolean', 'user');
+
+    // Add query.
+    if (!empty($search)) {
+      $search = $lucene_syntax_escape ?
+          islandora_solr_facet_query_escape($search, $lucene_regex) :
+          islandora_solr_lesser_escape($search);
+
+      $query_array[] = array(
+        'search' => "$field:($search)",
+        'boolean' => $boolean,
+      );
+    }
+  }
+
+  // Create query.
+  $query = '';
+  $i = 0;
+  foreach ($query_array as $term) {
+    $query .= $term['search'];
+    if (count($query_array) - 1 != $i) {
+      $query .= ' ' . $term['boolean'] . ' ';
+    }
+    $i++;
+  }
+
+  // Check if query is empty.
+  if (empty($query)) {
+    if (variable_get('islandora_solr_base_advanced', FALSE)) {
+      $query = variable_get('islandora_solr_base_query', '*:*');
+    }
+    else {
+      $query = '*:*';
+    }
+  }
+
+  // Handle filters.
+  $filter = '';
+  if (isset($form_state['values']['islandora_solr_allow_preserve_filters']) && $form_state['values']['islandora_solr_allow_preserve_filters']) {
+    $filter = isset($_GET['f']) ? $_GET['f'] : '';
+  }
+  switch ($form_state['values']['search_choice']) {
+    case 'digital':
+      $filter_val = '-RELS_EXT_hasModel_uri_s:"info\:fedora\/islandora\:oai_importCModel"';
+      break;
+
+    case 'catalog':
+      $filter_val = 'RELS_EXT_hasModel_uri_s:"info\:fedora\/islandora\:oai_importCModel"';
+      break;
+
+    default;
+      $filter_val = NULL;
+  }
+  if ($filter_val) {
+    if ($filter) {
+      $filter[] = $filter_val;
+    }
+    else {
+      $filter = array($filter_val);
+    }
+  }
+  // Use work around for some special URL characters.
+  $query = islandora_solr_replace_slashes($query);
+
+  // Navigate to results page.
+  $form_state['redirect'] = array(
+    ISLANDORA_SOLR_SEARCH_PATH . "/$query",
+    $filter ? array('query' => array('f' => $filter)) : array(),
+  );
+}

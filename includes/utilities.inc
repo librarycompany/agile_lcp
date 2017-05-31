@@ -91,3 +91,51 @@ function agile_lcp_run_xsl_transform($info) {
   return @$processor->transformToXML($input);
 }
 
+/**
+ * Gets pids from OAI identifier
+ *
+ * @param string $identifier
+ *   OAI identifier
+ *
+ * @return array
+ *   Array of pids
+ */
+function agile_lcp_get_pids_from_identifier($identifier) {
+  $query_processor = new IslandoraSolrQueryProcessor();
+  $query_processor->solrQuery = "mods_recordInfo_recordIdentifier_s:identifier";
+  $query_processor->solrStart = 0;
+  $query_processor->solrLimit = 10;
+  $query_processor->solrParams = array(
+    'fl' => "PID",
+  );
+  $query_processor->executeQuery(FALSE);
+  $solr_results = $query_processor->islandoraSolrResult;
+  $pids = array();
+  if ($solr_results['response']['objects']) {
+    foreach ($solr_results['response']['objects'] as $object) {
+      $pids[] = $object['PID'];
+    }
+  }
+  return $pids;
+}
+
+/**
+ * Gets pids where more than one Islandora oject has same OAI identifier
+ * 
+ * @return array
+ *   PIDS
+ */
+function agile_lcp_get_duplicates() {
+  $query = "mods_recordInfo_recordIdentifier_s:*";
+  $qp = new IslandoraSolrQueryProcessor();
+  $qp->buildQuery('*:*');
+  $qp->solrParams['fq'] = $query;
+  $qp->solrParams['facet'] = 'true';
+  $qp->solrParams['facet.limit'] = 200;
+  $qp->solrParams['facet.mincount'] = 2;
+  $qp->solrParams['facet.field'] = array('mods_recordInfo_recordIdentifier_s');
+  $qp->solrParams['fl'] = 'PID';
+  $qp->executeQuery(FALSE);
+  return $qp->islandoraSolrResult['facet_counts']['facet_fields']['mods_recordInfo_recordIdentifier_s'];
+}
+

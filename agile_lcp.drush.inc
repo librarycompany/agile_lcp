@@ -10,7 +10,7 @@
  */
 function agile_lcp_drush_help($command) {
   switch ($command) {
-    case 'drush:agile_OAI_harvest':
+    case 'drush:agile_OAI_harvest_batch':
       return dt('Creates objects');
   }
 }
@@ -21,31 +21,48 @@ function agile_lcp_drush_help($command) {
 function agile_lcp_drush_command() {
   $items = array();
   $items['agile_OAI_harvest_batch'] = array(
-    'description' => dt('Harvestsnrecords from OAI stream.'),
+    'description' => dt('Harvests records from OAI stream.'),
+    'options' => array(
+      'limit' => array(
+        'description' => dt('The number of batches to process.  Defaults to 1'),
+        'required' => FALSE,
+      ),
+    ),
+    'aliases' => array('OAI'),
+    'drupal dependencies' => array(
+      'islandora',
+    ),
+    'examples' => array(
+      'drush -u 1 OAI --limit=3',
+    ),
+  );
+
+
+  $items['agile_OAI_prep_batch'] = array(
+    'description' => dt('Preps batch process to harvest records from OAI stream.'),
     'options' => array(
       'limit' => array(
         'value' => 'optional',
         'description' => dt('The number of batches to process.  Defaults to 1'),
       ),
-      'new' => array(
-        'value' => 'optional',
-        'description' => dt('Use on first run of harvest only.'), //not fully implemented yet.
-      ),
-      'drupal dependencies' => array(
-        'islandora',
-      ),
-      'examples' => array(
-        'rush -u 1 OAI --limit=3',
-      ),
     ),
-    'aliases' => array('OAI'),
+    'drupal dependencies' => array(
+      'islandora',
+    ),
+    'examples' => array(
+      'rush -u 1 OAI --limit=3',
+    ),
+    'aliases' => array('OAI_Prep'),
   );
+
+
   return $items;
 }
 
 function drush_agile_lcp_agile_OAI_harvest_batch() {
   module_load_include('inc', 'agile_lcp', 'includes/db');
   $limit = drush_get_option('limit', 1);
+
   $batch = array();
   $tokens = agile_lcp_get_unproccessed_tokens($limit);
   foreach ($tokens as $token_id => $token) {
@@ -118,6 +135,12 @@ function agile_lcp_drush_build_object($identifier) {
   islandora_add_object($object);
 }
 
+/**
+ * Output for feedback fro screen.
+ *
+ * @param strng $token_id
+ *   OAI token
+ */
 function agile_lcp_batch_notifier($token_id) {
   drush_print("\n Start sub_batch - Processing token #$token_id");
 }
