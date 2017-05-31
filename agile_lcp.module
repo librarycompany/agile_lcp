@@ -74,7 +74,7 @@ function agile_lcp_islandora_required_objects(IslandoraTuque $connection) {
  */
 function agile_lcp_islandora_solr_results_alter(&$search_results, $query_processor) {
   foreach ($search_results as &$result) {
-    if ($result['solr_doc']) {
+    if ($result['solr_doc'] && isset($result['content_models'])) {
       if (in_array('info:fedora/islandora:oai_importCModel', $result['content_models'])) {
         $identifier = $result['solr_doc']['mods_recordInfo_recordIdentifier_s'];
         $result['solr_doc']['mods_recordInfo_recordIdentifier_s'] = l($identifier, "http://pacscl.exlibrisgroup.com:48992/F?func=direct&doc_number=$identifier");
