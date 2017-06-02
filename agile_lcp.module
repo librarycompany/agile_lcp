@@ -73,14 +73,39 @@ function agile_lcp_islandora_required_objects(IslandoraTuque $connection) {
  * Implements hook_islandora_solr_results_alter().
  */
 function agile_lcp_islandora_solr_results_alter(&$search_results, $query_processor) {
-  foreach ($search_results as &$result) {
+  $matches = array();
+  $identifiers = array();
+  foreach ($search_results as $index => &$result) {
     if ($result['solr_doc'] && isset($result['content_models'])) {
-      if (in_array('info:fedora/islandora:oai_importCModel', $result['content_models'])) {
+      if (isset($result['solr_doc']['mods_recordInfo_recordIdentifier_s'])) {
         $identifier = $result['solr_doc']['mods_recordInfo_recordIdentifier_s'];
+        $identifiers[$index] = $identifier;
+        $is_oai = in_array('info:fedora/islandora:oai_importCModel', $result['content_models']);
+        $pairings[] = array('identifier' => $identifier, 'oai' => $is_oai);
+      }
+      $matches[] = $identifier;
+      if ($is_oai) {
         $result['solr_doc']['mods_recordInfo_recordIdentifier_s'] = l($identifier, "http://pacscl.exlibrisgroup.com:48992/F?func=direct&doc_number=$identifier");
       }
     }
   }
+  $values = array_count_values($identifiers);
+  foreach ($values as $identifier => $count) {
+    if ($count > 1) {
+      $doubles[] = $identifier;
+    }
+  }
+  foreach ($identifiers as $index => $identifier) {
+    if (in_array($identifier, $doubles)) {
+      foreach ($pairings as $key => $values) {
+        if ($values['oai']) {
+          unset($search_results[$index]);
+          continue;
+        }
+      }
+    }
+  }
+  $search_results = array_values($search_results);
 }
 
 /**
@@ -245,4 +270,19 @@ function agile_lcp_advanced_search_submit($form, &$form_state) {
     ISLANDORA_SOLR_SEARCH_PATH . "/$query",
     $filter ? array('query' => array('f' => $filter)) : array(),
   );
+}
+
+function agile_lcp_form_islandora_collection_search_form_alter(&$form, &$form_state, $form_id) {
+  $options = array(
+    'all' => t("All"),
+    'digital' => t("Digital Collections"),
+    'catalog' => t('Book Catalog'),
+  );
+  $form['search_choice'] = array(
+    '#weight' => -10,
+    '#type' => 'select',
+    '#options' => $options,
+  );
+
+  $form['#submit'] = array('agile_lcp_simple_search_submit');
 }

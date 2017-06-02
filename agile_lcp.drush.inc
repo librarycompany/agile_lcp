@@ -27,6 +27,10 @@ function agile_lcp_drush_command() {
         'description' => dt('The number of batches to process.  Defaults to 1'),
         'required' => FALSE,
       ),
+      'new' => array(
+        'description' => dt('Whether this is the first run of the harvest, Defaults to FALSE'),
+        'required' => FALSE,
+      ),
     ),
     'aliases' => array('OAI'),
     'drupal dependencies' => array(
@@ -41,16 +45,24 @@ function agile_lcp_drush_command() {
   $items['agile_OAI_prep_batch'] = array(
     'description' => dt('Preps batch process to harvest records from OAI stream.'),
     'options' => array(
-      'limit' => array(
+      'url' => array(
         'value' => 'optional',
-        'description' => dt('The number of batches to process.  Defaults to 1'),
+        'description' => dt("The url to initiate harvesting.  Defaults to 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21'"),
+      ),
+      'from' => array(
+        'description' => dt("Datestamp of first harvested object - optional (YYYY-MM-DD)"),
+        'required' => FALSE,
+      ),
+      'to' => array(
+        'description' => dt("Datestamp of first harvested object - optional (YYYY-MM-DD)"),
+        'required' => FALSE,
       ),
     ),
     'drupal dependencies' => array(
       'islandora',
     ),
     'examples' => array(
-      'rush -u 1 OAI --limit=3',
+      'drush -u 1 OAI_Prep',
     ),
     'aliases' => array('OAI_Prep'),
   );
@@ -61,9 +73,21 @@ function agile_lcp_drush_command() {
 
 function drush_agile_lcp_agile_OAI_harvest_batch() {
   module_load_include('inc', 'agile_lcp', 'includes/db');
-  $limit = drush_get_option('limit', 1);
-
   $batch = array();
+  $limit = drush_get_option('limit', 1);
+  $new = drush_get_option('new', FALSE);
+
+  if ($new) {
+    $limit--;
+    $batch ['operations'][] = array(
+      'agile_lcp_add_OAI_batch_worker',
+      array(
+        'token_id' => NULL,
+        'token' => NULL,
+      ),
+    );
+  }
+
   $tokens = agile_lcp_get_unproccessed_tokens($limit);
   foreach ($tokens as $token_id => $token) {
     $batch ['operations'][] = array(
@@ -79,9 +103,15 @@ function drush_agile_lcp_agile_OAI_harvest_batch() {
   drush_backend_batch_process();
 }
 
-function agile_lcp_add_OAI_batch_worker($token_id, $token, &$context) {
+function agile_lcp_add_OAI_batch_worker($token_id = NULL, $token = NULL, &$context) {
   drush_print('.', 0, NULL, FALSE);
-  $url = "http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&resumptionToken=$token";
+  if ($token) {
+    $url = "http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&resumptionToken=$token";
+  }
+  else {
+    drush_print(dt("First run."));
+    $url = 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21';
+  }
   $input = file_get_contents($url);
   $dom = new DOMDocument();
   $dom->loadXML($input);
@@ -96,10 +126,12 @@ function agile_lcp_add_OAI_batch_worker($token_id, $token, &$context) {
         'identifier' => $new_identifier->nodeValue,
     ));
   }
-  $batch['operations'][] = array('agile_lcp_drush_mark_token', array(
-      'token_id' => $token_id,
-      'token' => $token,
-  ));
+  if ($token) {
+    $batch['operations'][] = array('agile_lcp_drush_mark_token', array(
+        'token_id' => $token_id,
+        'token' => $token,
+    ));
+  }
   batch_set($batch);
 }
 
@@ -132,7 +164,13 @@ function agile_lcp_drush_build_object($identifier) {
     $ds->mimetype = 'text/xml';
     $object->ingestDatastream($ds);
   }
-  islandora_add_object($object);
+
+  try {
+    islandora_add_object($object);
+  }
+  catch (Exception $ex) {
+    drush_print("Failed to ingest $identifier");
+  }
 }
 
 /**
@@ -157,4 +195,49 @@ function agile_lcp_drush_mark_token($token_id, $token) {
           ->fields(array(
             'processed' => 1,
           ))->execute();
+}
+
+function drush_agile_lcp_agile_OAI_prep_batch() {
+  drush_print(dt("Adding to database -"));
+  module_load_include('inc', 'agile_lcp', 'includes/db');
+  $url = drush_get_option('url', 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21');
+  $to = drush_get_option('to', FALSE);
+  $from = drush_get_option('from', FALSE);
+  if ($to) {
+    $url .= "&to=$to";
+  }
+    if ($from) {
+    $url .= "&from=$from";
+  }
+  set_time_limit(0);
+  $urlParts = explode('?', $url);
+  $base_url = $urlParts[0] . "?verb=ListIdentifiers&resumptionToken=";
+  $data = file_get_contents($url);
+  if (!$data) {
+    drush_print(dt("No results returned - please check url and login credentials"));
+    return;
+  }
+  $dom = new DOMDocument();
+  $dom->loadXML($data);
+  $resumption_node = $dom->getElementsByTagName('resumptionToken')->item(0);
+  $token = $resumption_node->nodeValue;
+  $count = 1;
+  while ($token) {
+    $new_url = $base_url . $token;
+    $token = NULL;
+    $data = file_get_contents($new_url);
+    $sub_dom = new DOMDocument();
+    $sub_dom->loadXML($data);
+    $resumption_tokens = $sub_dom->getElementsByTagName('resumptionToken');
+    if ($resumption_tokens->length > 0) {
+      $count++;
+      $resumption_node = $sub_dom->getElementsByTagName('resumptionToken')->item(0);
+      $token = $resumption_node->nodeValue;
+      agile_lcp_add_token($token);
+      if ($count % 10 == 0) {
+        drush_print('.', 0, NULL, FALSE);
+      }
+    }
+  }
+  drush_print(dt("Complete."));
 }

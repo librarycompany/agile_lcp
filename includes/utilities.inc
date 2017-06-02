@@ -43,6 +43,15 @@ function build_full_dom($url) {
   return $tokens;
 }
 
+/**
+ * Gets all required datastreams from identifier.
+ *
+ * @param string $identifier
+ *   OAI Identifier
+ *
+ * @return array
+ *   Associative array of xmls to be ingested.
+ */
 function get_streams_from_entry($identifier) {
   module_load_include('inc', 'islandora_marcxml', 'includes/utilities');
   $url = "http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=GetRecord&identifier=$identifier&metadataPrefix=marc21";
@@ -102,7 +111,7 @@ function agile_lcp_run_xsl_transform($info) {
  */
 function agile_lcp_get_pids_from_identifier($identifier) {
   $query_processor = new IslandoraSolrQueryProcessor();
-  $query_processor->solrQuery = "mods_recordInfo_recordIdentifier_s:identifier";
+  $query_processor->solrQuery = "mods_recordInfo_recordIdentifier_s:$identifier";
   $query_processor->solrStart = 0;
   $query_processor->solrLimit = 10;
   $query_processor->solrParams = array(
@@ -126,16 +135,15 @@ function agile_lcp_get_pids_from_identifier($identifier) {
  *   PIDS
  */
 function agile_lcp_get_duplicates() {
-  $query = "mods_recordInfo_recordIdentifier_s:*";
+  $query = 'mods_recordInfo_recordIdentifier_s:* and RELS_EXT_hasModel_uri_s:"info:fedora/islandora:oai_importCModel"';
   $qp = new IslandoraSolrQueryProcessor();
   $qp->buildQuery('*:*');
   $qp->solrParams['fq'] = $query;
   $qp->solrParams['facet'] = 'true';
   $qp->solrParams['facet.limit'] = 200;
   $qp->solrParams['facet.mincount'] = 2;
-  $qp->solrParams['facet.field'] = array('mods_recordInfo_recordIdentifier_s');
-  $qp->solrParams['fl'] = 'PID';
+  $qp->solrParams['facet.field'] = array('mods_recordInfo_recordIdentifier_s', 'RELS_EXT_hasModel_uri_s');
+  $qp->solrParams['fl'] = 'PID mods_recordInfo_recordIdentifier_s';
   $qp->executeQuery(FALSE);
   return $qp->islandoraSolrResult['facet_counts']['facet_fields']['mods_recordInfo_recordIdentifier_s'];
 }
-

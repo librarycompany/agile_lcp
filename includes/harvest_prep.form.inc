@@ -23,7 +23,7 @@ function agile_lcp_prep_harvest($form, $form_state) {
       ->condition('processed', 0)
       ->countQuery()->execute()
       ->fetchField();
-  
+
   if (!$token_count) {
     $message = t('All tokens will be entered into database for processing');
   }
@@ -35,7 +35,22 @@ function agile_lcp_prep_harvest($form, $form_state) {
     '#type' => 'markup',
     '#markup' => "<p>$message</p>",
   );
-
+  $form['url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('URL to initiate harvest'),
+    '#default_value' => 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21',
+    '#size' =>90,
+  );
+  $form['from'] = array(
+    '#type' => 'textfield',
+    '#description' => t("Datestamp of first harvested object - optional (YYYY-MM-DD)"),
+    '#title' => t('Start date'),
+  );
+  $form['to'] = array(
+    '#type' => 'textfield',
+    '#title' => t('End date'),
+    '#description' => t("Datestamp of last harvested object - optional (YYYY-MM-DD)"),
+  );
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t("Prepare harvest"),
@@ -43,10 +58,24 @@ function agile_lcp_prep_harvest($form, $form_state) {
   return $form;
 }
 
+/**
+ * Submit function for harvest prep form.
+ *
+ * @param array $form
+ *   The Drupal form definition.
+ * @param array $form_state
+ *   The Drupal form state.
+ */
 function agile_lcp_prep_harvest_submit($form, $form_state) {
   module_load_include('inc', 'agile_lcp', 'includes/db');
   $url = 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21';
-  $tokens = array();
+  if ($form_state['values']['from'] != '') {
+    $url .= "&from=" . $form_state['values']['from'];
+  }
+    if ($form_state['values']['to'] != '') {
+    $url .= "&to=" . $form_state['values']['to'];
+  }
+
   set_time_limit(0);
   $urlParts = explode('?', $url);
   $base_url = $urlParts[0] . "?verb=ListIdentifiers&resumptionToken=";
@@ -62,6 +91,7 @@ function agile_lcp_prep_harvest_submit($form, $form_state) {
   while ($token) {
     $new_url = $base_url . $token;
     $data = file_get_contents($new_url);
+    $token = NULL;
     $sub_dom = new DOMDocument();
     $sub_dom->loadXML($data);
     $resumption_tokens = $sub_dom->getElementsByTagName('resumptionToken');
