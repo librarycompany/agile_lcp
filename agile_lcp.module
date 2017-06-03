@@ -87,6 +87,9 @@ function agile_lcp_islandora_solr_results_alter(&$search_results, $query_process
       if ($is_oai) {
         $result['solr_doc']['mods_recordInfo_recordIdentifier_s'] = l($identifier, "http://pacscl.exlibrisgroup.com:48992/F?func=direct&doc_number=$identifier");
       }
+      else {
+        unset($result['solr_doc']['mods_recordInfo_recordIdentifier_s']);
+      }
     }
   }
   $values = array_count_values($identifiers);
