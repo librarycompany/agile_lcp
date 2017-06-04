@@ -294,3 +294,20 @@ function agile_lcp_form_islandora_collection_search_form_alter(&$form, &$form_st
 
   $form['#submit'] = array('agile_lcp_simple_search_submit');
 }
+
+/**
+ * Implements hook_CMODEL_PID_islandora_derivative().
+ */
+function agile_lcp_islandora_oai_importCModel_islandora_derivative() {
+  return array(
+    array(
+      'source_dsid' => 'MARC',
+      'destination_dsid' => 'MODS',
+      'weight' => '0',
+      'function' => array(
+        'agile_lcp_create_derived_streams',
+      ),
+      'file' => drupal_get_path('module', 'agile_lcp') . '/includes/derivatives.inc',
+    ),
+  );
+}

@@ -71,6 +71,9 @@ function agile_lcp_drush_command() {
   return $items;
 }
 
+/**
+ * Kicks off serises of sub-batches to harvest all OAI records from token,
+ */
 function drush_agile_lcp_agile_OAI_harvest_batch() {
   module_load_include('inc', 'agile_lcp', 'includes/db');
   $batch = array();
@@ -89,6 +92,11 @@ function drush_agile_lcp_agile_OAI_harvest_batch() {
   }
 
   $tokens = agile_lcp_get_unproccessed_tokens($limit);
+  $count = count($tokens);
+  if ($count < $limit) {
+    $limit = count($tokens);
+    drush_print(dt("There are only @count tokens left to process", array('@count' => $count)));
+  }
   foreach ($tokens as $token_id => $token) {
     $batch ['operations'][] = array(
       'agile_lcp_add_OAI_batch_worker',
@@ -103,6 +111,16 @@ function drush_agile_lcp_agile_OAI_harvest_batch() {
   drush_backend_batch_process();
 }
 
+/**
+ * KIcks off sub_batch.
+ * 
+ * @param string $token_id
+ *   token id
+ * @param string $token
+ *  resumption_token
+ * @param type $context
+ *   Batch context.
+ */
 function agile_lcp_add_OAI_batch_worker($token_id = NULL, $token = NULL, &$context) {
   drush_print('.', 0, NULL, FALSE);
   if ($token) {
@@ -135,6 +153,12 @@ function agile_lcp_add_OAI_batch_worker($token_id = NULL, $token = NULL, &$conte
   batch_set($batch);
 }
 
+/**
+ * Builds and ingests islandora object for  OAI record.
+ *
+ * @param type $identifier
+ *   UNique OAI identifier
+ */
 function agile_lcp_drush_build_object($identifier) {
   drush_print('.', 0, NULL, FALSE);
   module_load_include('inc', 'agile_lcp', 'includes/utilities');
@@ -197,6 +221,10 @@ function agile_lcp_drush_mark_token($token_id, $token) {
           ))->execute();
 }
 
+/**
+ * Adds all tokens from supplied URL to prepare for harvesting.
+ *
+ */
 function drush_agile_lcp_agile_OAI_prep_batch() {
   drush_print(dt("Adding to database -"));
   module_load_include('inc', 'agile_lcp', 'includes/db');
@@ -206,7 +234,7 @@ function drush_agile_lcp_agile_OAI_prep_batch() {
   if ($to) {
     $url .= "&to=$to";
   }
-    if ($from) {
+  if ($from) {
     $url .= "&from=$from";
   }
   set_time_limit(0);
@@ -239,5 +267,5 @@ function drush_agile_lcp_agile_OAI_prep_batch() {
       }
     }
   }
-  drush_print(dt("Complete."));
+  drush_print(dt("\n Complete."));
 }

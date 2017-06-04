@@ -117,12 +117,11 @@ function agile_lcp_build_object($identifier) {
   $object->label = $label;
   foreach ($streams as $dsid => $content) {
     $type = ($dsid == 'DC') ? 'X' : 'M';
-    $mine = ($dsid == 'DC') ? 'text/xml' : 'application/xml';
+    $mime = ($dsid == 'DC') ? 'text/xml' : 'application/xml';
     $ds = $object->constructDatastream($dsid, 'M');
     $ds->setContentFromString($content, FALSE);
-    $mime_detect = new MimeDetect();
     $ds->label = $dsid;
-    $ds->mimetype = 'text/xml';
+    $ds->mimetype = $mime;
     $object->ingestDatastream($ds);
   }
   islandora_add_object($object);
