@@ -96,7 +96,7 @@ function agile_lcp_run_xsl_transform($info) {
   $input->loadXML($info['input']);
   $processor = new XSLTProcessor();
   $processor->importStylesheet($xsl);
-
+  
   return @$processor->transformToXML($input);
 }
 
