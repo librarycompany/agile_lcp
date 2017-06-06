@@ -66,16 +66,8 @@ function agile_lcp_create_derived_streams(AbstractObject $object, $force = FALSE
  */
 function agile_lcp_get_streams_from_marc($marc_xml) {
   module_load_include('inc', 'agile_lcp', 'includes/utilities');
-  $transform_args = array(
-    'xsl' => drupal_get_path('module', 'agile_lcp') . '/xml/MARC21slim2MODS3-5_LCP.xsl',
-    'input' => $marc_xml,
-  );
-  $mods_record = trim(agile_lcp_run_xsl_transform($transform_args));
-  $transform_args = array(
-    'xsl' => drupal_get_path('module', 'agile_lcp') . '/xml/marc_to_dc.xsl',
-    'input' => $marc_xml,
-  );
-  $dc_record = trim(agile_lcp_run_xsl_transform($transform_args));
+  $mods_record = trim(agile_lcp_transform_with_saxonb('MARC21slim2MODS3-5_LCP.xsl', $marc_xml));
+  $dc_record = trim(agile_lcp_transform_with_saxonb('marc_to_dc.xsl', $marc_xml));
   return array(
     'MODS' => $mods_record,
     'DC' => $dc_record,

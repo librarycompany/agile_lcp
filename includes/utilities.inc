@@ -61,16 +61,8 @@ function get_streams_from_entry($identifier) {
   $dom->loadXML($input);
   $record_node = $dom->getElementsByTagNameNS($marcNS, 'record')->item(0);
   $marc_record = $dom->saveXML($record_node);
-  $transform_args = array(
-    'xsl' => drupal_get_path('module', 'agile_lcp') . '/xml/MARC21slim2MODS3-5_LCP.xsl',
-    'input' => $marc_record,
-  );
-  $mods_record = trim(agile_lcp_run_xsl_transform($transform_args));
-  $transform_args = array(
-    'xsl' => drupal_get_path('module', 'agile_lcp') . '/xml/marc_to_dc.xsl',
-    'input' => $marc_record,
-  );
-  $dc_record = trim(agile_lcp_run_xsl_transform($transform_args));
+  $mods_record = trim(agile_lcp_transform_with_saxonb('MARC21slim2MODS3-5_LCP.xsl', $marc_record));
+  $dc_record = trim(agile_lcp_transform_with_saxonb('MARC21slim2MODS3-5_LCP.xsl', $marc_record));
   return array(
     'MODS' => $mods_record,
     'DC' => $dc_record,
@@ -146,4 +138,62 @@ function agile_lcp_get_duplicates() {
   $qp->solrParams['fl'] = 'PID mods_recordInfo_recordIdentifier_s';
   $qp->executeQuery(FALSE);
   return $qp->islandoraSolrResult['facet_counts']['facet_fields']['mods_recordInfo_recordIdentifier_s'];
+}
+
+/**
+ * Helper to transform XML using the named XSLT with saxonb.
+ *   Taken from DGI's lcpdora module with minro changes.
+ *
+ * @param string $xsl_name
+ *   Name of the XSL file to be used, relative to this module's "xml"
+ *   directory.
+ * @param string $doc
+ *   The XML to convert.
+ * @param array $params
+ *   An optional associative array of XSLT parameters mapping parameter names
+ *   to their values.
+ *
+ * @return string
+ *   The transformed xml.
+ */
+function agile_lcp_transform_with_saxonb($xsl_name, $doc, $params = array()) {
+  $module_path = drupal_get_path('module', 'agile_lcp');
+  $xsl_path = format_string('!path/xml/!xsl', array(
+    '!path' => $module_path,
+    '!xsl' => $xsl_name,
+  ));
+
+  $pipes = array();
+  $equal_join_and_escape = function ($key, $value) {
+    return escapeshellarg("$key=$value");
+  };
+  $escaped = array_map($equal_join_and_escape, array_keys($params), $params);
+  $param_string = implode(' ', $escaped);
+
+  $process = proc_open("saxonb-xslt -versionmsg:off - $xsl_path $param_string",
+    array(
+      0 => array(
+        'pipe',
+        'r',
+      ),
+      1 => array(
+        'pipe',
+        'w',
+      ),
+      2 => array(
+        'file',
+        '/dev/null',
+        'a',
+      ),
+    ),
+    $pipes
+  );
+
+  fwrite($pipes[0], $doc);
+  fclose($pipes[0]);
+  $saxonb_transformed = stream_get_contents($pipes[1]);
+  fclose($pipes[1]);
+  proc_close($process);
+
+  return $saxonb_transformed;
 }
