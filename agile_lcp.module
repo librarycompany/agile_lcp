@@ -290,8 +290,6 @@ function agile_lcp_form_islandora_collection_search_form_alter(&$form, &$form_st
     $form['simple']['collection_select']['#type'] = 'radios';
     $form['simple']['collection_select']['#options'] = $options;
     unset($form['simple']['#attributes']);
-
-
   }
 }
 
@@ -320,6 +318,8 @@ function agile_lcp_preprocess_islandora_solr_grid(&$variables) {
   module_load_include('inc', 'islandora_default_thumbs', 'includes/utilities');
   islandora_default_thumbs_prepare_vars_for_solr_page_template($variables, 'results', 'search');
   foreach ($variables['results'] as &$result) {
-    $result['thumbnail_url'] = $variables['associated_objects_array'][$result['PID']]['full_config']['thumb'];
+    if (isset($variables['associated_objects_array'][$result['PID']]['full_config']['thumb'])) {
+      $result['thumbnail_url'] = $variables['associated_objects_array'][$result['PID']]['full_config']['thumb'];
+    }
   }
 }
