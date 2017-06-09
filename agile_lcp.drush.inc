@@ -67,6 +67,26 @@ function agile_lcp_drush_command() {
     'aliases' => array('OAI_Prep'),
   );
 
+  $items['agile_get_collection_pids'] = array(
+    'description' => dt('Gets and records OAI collection PIDS.'),
+    'options' => array(
+      'limit' => array(
+        'description' => dt("Number of records to retrieve at once"),
+        'required' => FALSE,
+      ),
+      'iterations' => array(
+        'description' => dt("number of times to iterate"),
+        'required' => FALSE,
+      ),
+    ),
+    'drupal dependencies' => array(
+      'islandora',
+    ),
+    'examples' => array(
+      'drush -u 1 get_collection_pids',
+    ),
+    'aliases' => array('GCP'),
+  );
 
   return $items;
 }
@@ -268,4 +288,48 @@ function drush_agile_lcp_agile_OAI_prep_batch() {
     }
   }
   drush_print(dt("\n Complete."));
+}
+
+function drush_agile_lcp_agile_get_collection_pids() {
+  $result = db_select('collection_pids', 'cp')
+      ->fields('cp')
+      ->execute();
+  $count = $result->rowCount();
+  drush_print("$count in database table - start");
+  $limit = drush_get_option('limit', 1000);
+  $iterations = drush_get_option('iterations', 1);
+  $tuque = new IslandoraTuque();
+  for ($i = 0; $i < $iterations; $i++) {
+    $offset = ($i * $limit) + $count;
+    $query = <<<EOQ
+PREFIX fm: <info:fedora/fedora-system:def/model#>
+SELECT  ?pid 
+FROM <RISEARCH>
+WHERE
+{
+      ?pid  <fedora-rels-ext:isMemberOfCollection> <info:fedora/islandora:imported_oai>
+
+ }
+        limit  $limit
+        offset  $offset
+EOQ;
+    $results = $tuque->repository->ri->sparqlQuery($query);
+    if (count($results) == 0) {
+      drush_print(dt("No more repository results"));
+      break;
+    }
+    foreach ($results as $result) {
+      $nid = db_insert('collection_pids')
+          ->fields(array(
+            'pid' => $result['pid']['value'],
+            'indexed' => 0,
+          ))
+          ->execute();
+    }
+  }
+    $result = db_select('collection_pids', 'cp')
+      ->fields('cp')
+      ->execute();
+  $count = $result->rowCount();
+  drush_print("$count in database table - end");
 }

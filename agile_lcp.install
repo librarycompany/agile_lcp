@@ -34,5 +34,23 @@ function agile_lcp_schema() {
     ),
     'primary key' => array('token_id'),
   );
+  $schema['collection_pids'] = array(
+    'description' => 'Table pids from OAI collection.',
+    'fields' => array(
+      'PID' => array(
+        'description' => 'Unique ID given to each object',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+
+      'indexed' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('PID'),
+  );
   return $schema;
 }
