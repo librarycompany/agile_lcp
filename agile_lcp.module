@@ -87,6 +87,7 @@ function agile_lcp_islandora_solr_results_alter(&$search_results, $query_process
         $matches[] = $identifier;
         if ($is_oai) {
           $result['solr_doc']['mods_recordInfo_recordIdentifier_s'] = l($identifier, "http://pacscl.exlibrisgroup.com:48992/F?func=direct&doc_number=$identifier");
+          $result['object_url'] = "http://pacscl.exlibrisgroup.com:48992/F?func=direct&doc_number=$identifier";
         }
         else {
           unset($result['solr_doc']['mods_recordInfo_recordIdentifier_s']);
@@ -123,7 +124,7 @@ function agile_lcp_form_islandora_solr_simple_search_form_alter(&$form, &$form_s
   $options = array(
     'all' => t("All"),
     'digital' => t("Digital Collections"),
-    'catalog' => t('Book Catalog'),
+    'catalog' => t('Library Catalog'),
   );
   $form['search_choice'] = array(
     '#weight' => -10,
@@ -171,7 +172,7 @@ function agile_lcp_form_islandora_solr_advanced_search_form_alter_disabled(&$for
   $options = array(
     'all' => t("All"),
     'digital' => t("Digital Collections"),
-    'catalog' => t('Book Catalog'),
+    'catalog' => t('Library Catalog'),
   );
   $form['search_choice'] = array(
     '#weight' => -10,
@@ -281,14 +282,20 @@ function agile_lcp_advanced_search_submit($form, &$form_state) {
 }
 
 function agile_lcp_form_islandora_collection_search_form_alter(&$form, &$form_state, $form_id) {
-  if ($_GET['q'] == 'islandora/object/islandora:root') {
+
+  //error_log('Current path: ' . current_path());
+
+  if ($_GET['q'] == 'islandora/object/islandora:discovery' || current_path() == 'node/31') {
     $options = array(
-      'all' => t("All"),
+      'all' => t("All Collections"),
       'islandora:root' => t("Digital Collections"),
-      'islandora:imported_oai' => t('Catalog'),
+      'islandora:imported_oai' => t('Library Catalog'),
     );
     $form['simple']['collection_select']['#type'] = 'radios';
     $form['simple']['collection_select']['#options'] = $options;
+    $form['simple']['collection_select']['#default_value'] = 'all';
+    $form['simple']['discovery']['#type'] = 'hidden';
+    $form['simple']['discovery']['#value'] = '1';
     unset($form['simple']['#attributes']);
   }
 }
@@ -312,14 +319,30 @@ function agile_lcp_islandora_oai_importCModel_islandora_derivative() {
 
 /**
  * Implements hook_preprocess();
-
  */
 function agile_lcp_preprocess_islandora_solr_grid(&$variables) {
+  agile_lcp_prepare_solr($variables);
+}
+
+/**
+ * Implements hook_process();
+ */
+function agile_lcp_process_islandora_solr(&$variables) {
+  agile_lcp_prepare_solr($variables);
+}
+
+/**
+ * Preps variables for process and preprocess hooks.
+ */
+function agile_lcp_prepare_solr(&$variables) {
   module_load_include('inc', 'islandora_default_thumbs', 'includes/utilities');
   islandora_default_thumbs_prepare_vars_for_solr_page_template($variables, 'results', 'search');
   foreach ($variables['results'] as &$result) {
     if (isset($variables['associated_objects_array'][$result['PID']]['full_config']['thumb'])) {
       $result['thumbnail_url'] = $variables['associated_objects_array'][$result['PID']]['full_config']['thumb'];
+      $thumbnail = $result['thumbnail'];
+      $target = $result['object_url'];
+      $result['thumbnail'] = preg_replace('/href."/', "href=\"$target", $thumbnail);
     }
   }
 }

@@ -197,3 +197,35 @@ function agile_lcp_transform_with_saxonb($xsl_name, $doc, $params = array()) {
 
   return $saxonb_transformed;
 }
+
+/**
+ * Get all pids from islandora:imported_oai collection
+ */
+function agile_lcp_get_collection_pids() {
+  $limit = 10000;
+  $tuque = new IslandoraTuque();
+  for ($i = 0; $i < 4; $i++) {
+    $offset = $i * $limit;
+    $query = <<<EOQ
+PREFIX fm: <info:fedora/fedora-system:def/model#>
+SELECT  ?pid 
+FROM <RISEARCH>
+WHERE
+{
+      ?pid  <fedora-rels-ext:isMemberOfCollection> <info:fedora/islandora:imported_oai>
+
+ }
+        limit  $limit
+        offset  $offset
+EOQ;
+    $results = $tuque->repository->ri->sparqlQuery($query);
+    foreach ($results as $result) {
+      $nid = db_insert('collection_pids')
+          ->fields(array(
+            'pid' => $result['pid']['value'],
+            'indexed' => 0,
+          ))
+          ->execute();
+    }
+  }
+}
