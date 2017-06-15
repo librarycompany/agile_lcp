@@ -94,6 +94,13 @@ function agile_lcp_drush_command() {
     ),
     'aliases' => array('UCPT'),
   );
+  $items['agile_activate'] = array(
+    'description' => dt('Activates objects from file'),
+    'examples' => array(
+      'drush -u 1 AA',
+    ),
+    'aliases' => array('AA'),
+  );
   return $items;
 }
 
@@ -364,10 +371,33 @@ function drush_agile_lcp_agile_remove_indexed_collection_pids() {
   else {
     drush_print("Could not open file");
   }
-    $result = db_select('collection_pids', 'cp')
+  $result = db_select('collection_pids', 'cp')
       ->fields('cp')
       ->condition('indexed', 0)
       ->execute();
   $count = $result->rowCount();
   drush_print("$count unindexed in database table - end");
+}
+
+function drush_agile_lcp_agile_activate() {
+  $count = 0;
+  $file = "/tmp/inactivePIDS.txt";
+  $handle = fopen($file, "r");
+  if ($handle) {
+    while (($line = fgets($handle)) !== false) {
+      $pid = trim($line);
+      $object = islandora_object_load($pid);
+      $object->state = 'A';
+      $count++;
+      if ($count % 10 == 0) {
+        drush_print('.', 0, NULL, FALSE);
+      }
+    }
+
+    fclose($handle);
+  }
+  else {
+    drush_print("Could not open file");
+  }
+  drush_print('Updated $count objects.');
 }
