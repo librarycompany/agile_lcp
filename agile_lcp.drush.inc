@@ -87,7 +87,13 @@ function agile_lcp_drush_command() {
     ),
     'aliases' => array('GCP'),
   );
-
+  $items['agile_remove_indexed_collection_pids'] = array(
+    'description' => dt('Removes already indexed pids from database.'),
+    'examples' => array(
+      'drush -u 1 UCPT',
+    ),
+    'aliases' => array('UCPT'),
+  );
   return $items;
 }
 
@@ -327,9 +333,41 @@ EOQ;
           ->execute();
     }
   }
-    $result = db_select('collection_pids', 'cp')
+  $result = db_select('collection_pids', 'cp')
       ->fields('cp')
       ->execute();
   $count = $result->rowCount();
   drush_print("$count in database table - end");
+}
+
+function drush_agile_lcp_agile_remove_indexed_collection_pids() {
+  $result = db_select('collection_pids', 'cp')
+      ->fields('cp')
+      ->condition('indexed', 0)
+      ->execute();
+  $count = $result->rowCount();
+  drush_print("$count unindexed in database table - start");
+  $file = "/tmp/collectionPIDS.txt";
+  $handle = fopen($file, "r");
+  if ($handle) {
+    while (($line = fgets($handle)) !== false) {
+      $pid = trim($line);
+      $query = db_update('collection_pids')
+              ->condition('pid', $pid)
+              ->fields(array(
+                'indexed' => 1,
+              ))->execute();
+    }
+
+    fclose($handle);
+  }
+  else {
+    drush_print("Could not open file");
+  }
+    $result = db_select('collection_pids', 'cp')
+      ->fields('cp')
+      ->condition('indexed', 0)
+      ->execute();
+  $count = $result->rowCount();
+  drush_print("$count unindexed in database table - end");
 }

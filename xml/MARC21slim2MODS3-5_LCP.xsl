@@ -348,19 +348,19 @@
             </xsl:choose>
         </typeOfResource>
         <xsl:if test="substring($controlField008,26,1)='d'">
-            <genre authority="marcgt">globe</genre>
+            <genre authority="marcgt">Globe</genre>
         </xsl:if>
         <xsl:if test="marc:controlfield[@tag='007'][substring(text(),1,1)='a'][substring(text(),2,1)='r']">
-            <genre authority="marcgt">remote-sensing image</genre>
+            <genre authority="marcgt">Remote-sensing image</genre>
         </xsl:if>
         <xsl:if test="$typeOf008='MP'">
             <xsl:variable name="controlField008-25" select="substring($controlField008,26,1)"/>
             <xsl:choose>
                 <xsl:when test="$controlField008-25='a' or $controlField008-25='b' or $controlField008-25='c' or marc:controlfield[@tag=007][substring(text(),1,1)='a'][substring(text(),2,1)='j']">
-                    <genre authority="marcgt">map</genre>
+                    <genre authority="marcgt">Map</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-25='e' or marc:controlfield[@tag=007][substring(text(),1,1)='a'][substring(text(),2,1)='d']">
-                    <genre authority="marcgt">atlas</genre>
+                    <genre authority="marcgt">Atlas</genre>
                 </xsl:when>
             </xsl:choose>
         </xsl:if>
@@ -368,22 +368,22 @@
             <xsl:variable name="controlField008-21" select="substring($controlField008,22,1)"/>
             <xsl:choose>
                 <xsl:when test="$controlField008-21='d'">
-                    <genre authority="marcgt">database</genre>
+                    <genre authority="marcgt">Database</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-21='l'">
-                    <genre authority="marcgt">loose-leaf</genre>
+                    <genre authority="marcgt">Loose-leaf</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-21='m'">
-                    <genre authority="marcgt">series</genre>
+                    <genre authority="marcgt">Series</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-21='n'">
-                    <genre authority="marcgt">newspaper</genre>
+                    <genre authority="marcgt">Newspaper</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-21='p'">
-                    <genre authority="marcgt">periodical</genre>
+                    <genre authority="marcgt">Periodical</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-21='w'">
-                    <genre authority="marcgt">web site</genre>
+                    <genre authority="marcgt">Web site</genre>
                 </xsl:when>
             </xsl:choose>
         </xsl:if>
@@ -391,73 +391,73 @@
             <xsl:variable name="controlField008-24" select="substring($controlField008,25,4)"/>
             <xsl:choose>
                 <xsl:when test="contains($controlField008-24,'a')">
-                    <genre authority="marcgt">abstract or summary</genre>
+                    <genre authority="marcgt">Abstract or summary</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'b')">
-                    <genre authority="marcgt">bibliography</genre>
+                    <genre authority="marcgt">Bibliography</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'c')">
-                    <genre authority="marcgt">catalog</genre>
+                    <genre authority="marcgt">Catalog</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'d')">
-                    <genre authority="marcgt">dictionary</genre>
+                    <genre authority="marcgt">Dictionary</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'e')">
-                    <genre authority="marcgt">encyclopedia</genre>
+                    <genre authority="marcgt">Encyclopedia</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'f')">
-                    <genre authority="marcgt">handbook</genre>
+                    <genre authority="marcgt">Handbook</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'g')">
-                    <genre authority="marcgt">legal article</genre>
+                    <genre authority="marcgt">Legal article</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'i')">
-                    <genre authority="marcgt">index</genre>
+                    <genre authority="marcgt">Index</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'k')">
-                    <genre authority="marcgt">discography</genre>
+                    <genre authority="marcgt">Discography</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'l')">
-                    <genre authority="marcgt">legislation</genre>
+                    <genre authority="marcgt">Legislation</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'m')">
-                    <genre authority="marcgt">theses</genre>
+                    <genre authority="marcgt">Theses</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'n')">
-                    <genre authority="marcgt">survey of literature</genre>
+                    <genre authority="marcgt">Survey of literature</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'o')">
-                    <genre authority="marcgt">review</genre>
+                    <genre authority="marcgt">Review</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'p')">
-                    <genre authority="marcgt">programmed text</genre>
+                    <genre authority="marcgt">Programmed text</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'q')">
-                    <genre authority="marcgt">filmography</genre>
+                    <genre authority="marcgt">Filmography</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'r')">
-                    <genre authority="marcgt">directory</genre>
+                    <genre authority="marcgt">Directory</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'s')">
-                    <genre authority="marcgt">statistics</genre>
+                    <genre authority="marcgt">Statistics</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'t')">
-                    <genre authority="marcgt">technical report</genre>
+                    <genre authority="marcgt">Technical report</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'v')">
-                    <genre authority="marcgt">legal case and case notes</genre>
+                    <genre authority="marcgt">Legal case and case notes</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'w')">
-                    <genre authority="marcgt">law report or digest</genre>
+                    <genre authority="marcgt">Law report or digest</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-24,'z')">
-                    <genre authority="marcgt">treaty</genre>
+                    <genre authority="marcgt">Treaty</genre>
                 </xsl:when>
             </xsl:choose>
             <xsl:variable name="controlField008-29" select="substring($controlField008,30,1)"/>
             <xsl:choose>
                 <xsl:when test="$controlField008-29='1'">
-                    <genre authority="marcgt">conference publication</genre>
+                    <genre authority="marcgt">Conference publication</genre>
                 </xsl:when>
             </xsl:choose>
         </xsl:if>
@@ -465,168 +465,168 @@
             <xsl:variable name="controlField008-26" select="substring($controlField008,27,1)"/>
             <xsl:choose>
                 <xsl:when test="$controlField008-26='a'">
-                    <genre authority="marcgt">numeric data</genre>
+                    <genre authority="marcgt">Numeric data</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-26='e'">
-                    <genre authority="marcgt">database</genre>
+                    <genre authority="marcgt">Database</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-26='f'">
-                    <genre authority="marcgt">font</genre>
+                    <genre authority="marcgt">Font</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-26='g'">
-                    <genre authority="marcgt">game</genre>
+                    <genre authority="marcgt">Game</genre>
                 </xsl:when>
             </xsl:choose>
         </xsl:if>
         <xsl:if test="$typeOf008='BK'">
             <xsl:if test="substring($controlField008,25,1)='j'">
-                <genre authority="marcgt">patent</genre>
+                <genre authority="marcgt">Patent</genre>
             </xsl:if>
             <xsl:if test="substring($controlField008,25,1)='2'">
-                <genre authority="marcgt">offprint</genre>
+                <genre authority="marcgt">Offprint</genre>
             </xsl:if>
             <xsl:if test="substring($controlField008,31,1)='1'">
-                <genre authority="marcgt">festschrift</genre>
+                <genre authority="marcgt">Festschrift</genre>
             </xsl:if>
             <xsl:variable name="controlField008-34" select="substring($controlField008,35,1)"/>
             <xsl:if test="$controlField008-34='a' or $controlField008-34='b' or $controlField008-34='c' or $controlField008-34='d'">
-                <genre authority="marcgt">biography</genre>
+                <genre authority="marcgt">Biography</genre>
             </xsl:if>
             <xsl:variable name="controlField008-33" select="substring($controlField008,34,1)"/>
             <xsl:choose>
                 <xsl:when test="$controlField008-33='e'">
-                    <genre authority="marcgt">essay</genre>
+                    <genre authority="marcgt">Essay</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='d'">
-                    <genre authority="marcgt">drama</genre>
+                    <genre authority="marcgt">Drama</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='c'">
-                    <genre authority="marcgt">comic strip</genre>
+                    <genre authority="marcgt">Comic strip</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='l'">
-                    <genre authority="marcgt">fiction</genre>
+                    <genre authority="marcgt">Fiction</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='h'">
-                    <genre authority="marcgt">humor, satire</genre>
+                    <genre authority="marcgt">Humor, satire</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='i'">
-                    <genre authority="marcgt">letter</genre>
+                    <genre authority="marcgt">Letter</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='f'">
-                    <genre authority="marcgt">novel</genre>
+                    <genre authority="marcgt">Novel</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='j'">
-                    <genre authority="marcgt">short story</genre>
+                    <genre authority="marcgt">Short story</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='s'">
-                    <genre authority="marcgt">speech</genre>
+                    <genre authority="marcgt">Speech</genre>
                 </xsl:when>
             </xsl:choose>
         </xsl:if>
         <xsl:if test="$typeOf008='MU'">
             <xsl:variable name="controlField008-30-31" select="substring($controlField008,31,2)"/>
             <xsl:if test="contains($controlField008-30-31,'b')">
-                <genre authority="marcgt">biography</genre>
+                <genre authority="marcgt">Biography</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'c')">
-                <genre authority="marcgt">conference publication</genre>
+                <genre authority="marcgt">Conference publication</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'d')">
-                <genre authority="marcgt">drama</genre>
+                <genre authority="marcgt">Drama</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'e')">
-                <genre authority="marcgt">essay</genre>
+                <genre authority="marcgt">Essay</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'f')">
-                <genre authority="marcgt">fiction</genre>
+                <genre authority="marcgt">Fiction</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'o')">
-                <genre authority="marcgt">folktale</genre>
+                <genre authority="marcgt">Folktale</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'h')">
-                <genre authority="marcgt">history</genre>
+                <genre authority="marcgt">History</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'k')">
-                <genre authority="marcgt">humor, satire</genre>
+                <genre authority="marcgt">Humor, satire</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'m')">
-                <genre authority="marcgt">memoir</genre>
+                <genre authority="marcgt">Memoir</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'p')">
-                <genre authority="marcgt">poetry</genre>
+                <genre authority="marcgt">Poetry</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'r')">
-                <genre authority="marcgt">rehearsal</genre>
+                <genre authority="marcgt">Rehearsal</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'g')">
-                <genre authority="marcgt">reporting</genre>
+                <genre authority="marcgt">Reporting</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'s')">
-                <genre authority="marcgt">sound</genre>
+                <genre authority="marcgt">Sound</genre>
             </xsl:if>
             <xsl:if test="contains($controlField008-30-31,'l')">
-                <genre authority="marcgt">speech</genre>
+                <genre authority="marcgt">Speech</genre>
             </xsl:if>
         </xsl:if>
         <xsl:if test="$typeOf008='VM'">
             <xsl:variable name="controlField008-33" select="substring($controlField008,34,1)"/>
             <xsl:choose>
                 <xsl:when test="$controlField008-33='a'">
-                    <genre authority="marcgt">art original</genre>
+                    <genre authority="marcgt">Art original</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='b'">
-                    <genre authority="marcgt">kit</genre>
+                    <genre authority="marcgt">Kit</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='c'">
-                    <genre authority="marcgt">art reproduction</genre>
+                    <genre authority="marcgt">Art reproduction</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='d'">
-                    <genre authority="marcgt">diorama</genre>
+                    <genre authority="marcgt">Diorama</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='f'">
-                    <genre authority="marcgt">filmstrip</genre>
+                    <genre authority="marcgt">Filmstrip</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='g'">
-                    <genre authority="marcgt">legal article</genre>
+                    <genre authority="marcgt">Legal article</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='i'">
-                    <genre authority="marcgt">picture</genre>
+                    <genre authority="marcgt">Picture</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='k'">
-                    <genre authority="marcgt">graphic</genre>
+                    <genre authority="marcgt">Graphic</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='l'">
-                    <genre authority="marcgt">technical drawing</genre>
+                    <genre authority="marcgt">Technical drawing</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='m'">
-                    <genre authority="marcgt">motion picture</genre>
+                    <genre authority="marcgt">Motion picture</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='n'">
-                    <genre authority="marcgt">chart</genre>
+                    <genre authority="marcgt">Chart</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='o'">
-                    <genre authority="marcgt">flash card</genre>
+                    <genre authority="marcgt">Flash card</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='p'">
-                    <genre authority="marcgt">microscope slide</genre>
+                    <genre authority="marcgt">Microscope slide</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='q' or marc:controlfield[@tag=007][substring(text(),1,1)='a'][substring(text(),2,1)='q']">
-                    <genre authority="marcgt">model</genre>
+                    <genre authority="marcgt">Model</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='r'">
-                    <genre authority="marcgt">realia</genre>
+                    <genre authority="marcgt">Realia</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='s'">
-                    <genre authority="marcgt">slide</genre>
+                    <genre authority="marcgt">Slide</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='t'">
-                    <genre authority="marcgt">transparency</genre>
+                    <genre authority="marcgt">Transparency</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='v'">
-                    <genre authority="marcgt">videorecording</genre>
+                    <genre authority="marcgt">Videorecording</genre>
                 </xsl:when>
                 <xsl:when test="$controlField008-33='w'">
-                    <genre authority="marcgt">toy</genre>
+                    <genre authority="marcgt">Toy</genre>
                 </xsl:when>
             </xsl:choose>
         </xsl:if>
@@ -637,40 +637,40 @@
             <xsl:variable name="controlField008-28" select="substring($controlField008,29,1)"/>
             <xsl:choose>
                 <xsl:when test="contains($controlField008-28,'a')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'c')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'f')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'m')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'i')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'l')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'m')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'o')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'s')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'u')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'z')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'|')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
             </xsl:choose>
         </xsl:if>
@@ -678,40 +678,40 @@
             <xsl:variable name="controlField008-28" select="substring($controlField008,29,1)"/>
             <xsl:choose>
                 <xsl:when test="contains($controlField008-28,'a')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'c')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'f')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'m')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'i')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'l')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'m')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'o')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'s')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'u')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'z')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'|')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
             </xsl:choose>
         </xsl:if>
@@ -719,40 +719,40 @@
             <xsl:variable name="controlField008-28" select="substring($controlField008,29,1)"/>
             <xsl:choose>
                 <xsl:when test="contains($controlField008-28,'a')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'c')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'f')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'m')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'i')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'l')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'m')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'o')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'s')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'u')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'z')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'|')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
             </xsl:choose>
         </xsl:if>
@@ -760,40 +760,40 @@
             <xsl:variable name="controlField008-28" select="substring($controlField008,29,1)"/>
             <xsl:choose>
                 <xsl:when test="contains($controlField008-28,'a')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'c')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'f')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'m')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'i')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'l')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'m')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'o')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'s')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'u')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'z')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'|')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
             </xsl:choose>
         </xsl:if>
@@ -801,40 +801,40 @@
             <xsl:variable name="controlField008-28" select="substring($controlField008,29,1)"/>
             <xsl:choose>
                 <xsl:when test="contains($controlField008-28,'a')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'c')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'f')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'m')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'i')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'l')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'m')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'o')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'s')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'u')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'z')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
                 <xsl:when test="contains($controlField008-28,'|')">
-                    <genre authority="marcgt">government publication</genre>
+                    <genre authority="marcgt">Government publication</genre>
                 </xsl:when>
             </xsl:choose>
         </xsl:if>
@@ -949,17 +949,29 @@
                     <xsl:when test="(@code='c')">
                         <xsl:if test="$leader6='d' or $leader6='f' or $leader6='p' or $leader6='t'">
                             <dateCreated>
-                                <xsl:call-template name="chopPunctuation">
-                                    <xsl:with-param name="chopString" select="."/>
-                                </xsl:call-template>
+								<xsl:variable name="date1">
+	                                <xsl:call-template name="chopPunctuation">
+	                                    <xsl:with-param name="chopString" select="."/>
+	                                </xsl:call-template>
+								</xsl:variable>
+								<xsl:if test="substring($date1, string-length($date1), 1) = ']' and not(substring($date1, 1, 1) = '[')">
+									<xsl:text>[</xsl:text>
+								</xsl:if>
+								<xsl:value-of select="$date1" />
                             </dateCreated>
                         </xsl:if>
 
                         <xsl:if test="not($leader6='d' or $leader6='f' or $leader6='p' or $leader6='t')">
                             <dateIssued>
-                                <xsl:call-template name="chopPunctuation">
-                                    <xsl:with-param name="chopString" select="."/>
-                                </xsl:call-template>
+                                <xsl:variable name="date1">
+									<xsl:call-template name="chopPunctuation">
+	                                    <xsl:with-param name="chopString" select="."/>
+	                                </xsl:call-template>
+								</xsl:variable>
+								<xsl:if test="substring($date1, string-length($date1), 1) = ']' and not(substring($date1, 1, 1) = '[')">
+									<xsl:text>[</xsl:text>
+								</xsl:if>
+								<xsl:value-of select="$date1" />
                             </dateIssued>
                         </xsl:if>
                     </xsl:when>
@@ -4739,10 +4751,14 @@
             </xsl:attribute>
             <!-- Template checks for altRepGroup - 880 $6 -->
             <xsl:call-template name="xxx880"/>
-            <xsl:call-template name="subfieldSelect">
-                <xsl:with-param name="codes">abcdef</xsl:with-param>
-                <xsl:with-param name="delimeter">-</xsl:with-param>
-            </xsl:call-template>
+            <xsl:call-template name="chopPunctuation">
+                <xsl:with-param name="chopString">
+		            <xsl:call-template name="subfieldSelect">
+		                <xsl:with-param name="codes">abcdef</xsl:with-param>
+		                <xsl:with-param name="delimeter"> -- </xsl:with-param>
+		            </xsl:call-template>
+				</xsl:with-param>
+			</xsl:call-template>
         </genre>
     </xsl:template>
 
@@ -4756,10 +4772,14 @@
             </xsl:if>
             <!-- Template checks for altRepGroup - 880 $6 -->
             <xsl:call-template name="xxx880"/>
-            <xsl:call-template name="subfieldSelect">
-                <xsl:with-param name="codes">a</xsl:with-param>
-                <xsl:with-param name="delimeter">-</xsl:with-param>
-            </xsl:call-template>
+            <xsl:call-template name="chopPunctuation">
+                <xsl:with-param name="chopString">
+		            <xsl:call-template name="subfieldSelect">
+		                <xsl:with-param name="codes">a</xsl:with-param>
+		                <xsl:with-param name="delimeter"> -- </xsl:with-param>
+		            </xsl:call-template>
+				</xsl:with-param>
+			</xsl:call-template>
         </genre>
 
     </xsl:template>
@@ -4781,10 +4801,14 @@
             </xsl:choose>
             <!-- Template checks for altRepGroup - 880 $6 -->
             <xsl:call-template name="xxx880"/>
-            <xsl:call-template name="subfieldSelect">
-                <xsl:with-param name="codes">abvxyz</xsl:with-param>
-                <xsl:with-param name="delimeter">-</xsl:with-param>
-            </xsl:call-template>
+            <xsl:call-template name="chopPunctuation">
+                <xsl:with-param name="chopString">
+		            <xsl:call-template name="subfieldSelect">
+		                <xsl:with-param name="codes">abvxyz</xsl:with-param>
+		                <xsl:with-param name="delimeter"> -- </xsl:with-param>
+		            </xsl:call-template>
+				</xsl:with-param>
+			</xsl:call-template>
         </genre>
     </xsl:template>
 
