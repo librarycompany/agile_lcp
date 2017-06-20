@@ -378,26 +378,4 @@ function drush_agile_lcp_agile_remove_indexed_collection_pids() {
   $count = $result->rowCount();
   drush_print("$count unindexed in database table - end");
 }
-
-function drush_agile_lcp_agile_activate() {
-  $count = 0;
-  $file = "/tmp/inactivePIDS.txt";
-  $handle = fopen($file, "r");
-  if ($handle) {
-    while (($line = fgets($handle)) !== false) {
-      $pid = trim($line);
-      $object = islandora_object_load($pid);
-      $object->state = 'A';
-      $count++;
-      if ($count % 10 == 0) {
-        drush_print('.', 0, NULL, FALSE);
-      }
-    }
-
-    fclose($handle);
-  }
-  else {
-    drush_print("Could not open file");
-  }
-  drush_print('Updated $count objects.');
-}
+    

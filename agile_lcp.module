@@ -109,12 +109,11 @@ function agile_lcp_islandora_solr_results_alter(&$search_results, $query_process
   }
 
   if ($doubles) {
-    foreach ($identifiers as $index => $identifier) {
+    foreach ($doubles as $index => $identifier) {
       if (in_array($identifier, $doubles)) {
-        foreach ($pairings as $key => $values) {
-          if ($values['oai']) {
-            unset($search_results[$index]);
-            continue;
+        foreach ($pairings as $key => $params) {
+          if ($params['oai']) {
+            unset($search_results[$key]);
           }
         }
       }
@@ -351,4 +350,20 @@ function agile_lcp_prepare_solr(&$variables) {
       $result['thumbnail'] = preg_replace('/href."/', "href=\"$target", $thumbnail);
     }
   }
+}
+
+/**
+ * Implements hook_islandora_solr_primary_display().
+ */
+function agile_lcp_islandora_solr_primary_display() {
+  return array(
+    'lcp' => array(
+      'name' => t('Filtered LCP Results'),
+      'module' => 'agile_lcp',
+      'file' => 'includes/lcp_results.inc',
+      'class' => "IslandoraSolrResultsLCP",
+      'function' => "displayResults",
+      'description' => t("Add Selected Results to Coursepack"),
+    ),
+  );
 }
