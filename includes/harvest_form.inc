@@ -77,7 +77,7 @@ function agile_lcp_harvest_form_submit($form, &$form_state) {
     $batch['operations'][] = array('agile_lcp_import_oai', array(
         'token_id' => NULL,
         'token' => NULL,
-    ));
+      ));
     $iterations--;
   }
   $tokens = agile_lcp_get_unproccessed_tokens($iterations);
@@ -85,7 +85,7 @@ function agile_lcp_harvest_form_submit($form, &$form_state) {
     $batch['operations'][] = array('agile_lcp_import_oai', array(
         'token_id' => $id,
         'token' => $redemption_token,
-    ));
+      ));
   }
   batch_set($batch);
   batch_process();
@@ -153,14 +153,14 @@ function agile_lcp_import_oai($token_id = FALSE, $token = FALSE) {
   );
   foreach ($identifiers as $identifier) {
     $batch2['operations'][] = array('agile_lcp_build_object', array(
-        'identifier' => $identifier
+        'identifier' => $identifier,
       ),
     );
   }
   if ($token) {
     $batch2['operations'][] = array('agile_lcp_mark_token', array(
         'token' => $token,
-      )
+      ),
     );
   }
   batch_set($batch2);
@@ -170,6 +170,7 @@ function agile_lcp_import_oai($token_id = FALSE, $token = FALSE) {
  * Marks token as processed.
  *
  * @param string $token
+ *   token being preocessed.
  */
 function agile_lcp_mark_token($token) {
   $query = db_update('resumption_token')

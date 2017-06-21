@@ -1,21 +1,29 @@
 <?php
+/**
+ * @file
+ * Utility functions.
+ */
 
 /**
- * Function build_full_dom
+ * Function build_full_dom.
  *
  * Description: returns dom object with all objects to be imported
+ *
  * @param URL $url
+ *   OAI url
+ *
  * @return DomDocument
+ *   DOMDocument
  */
 function build_full_dom($url) {
   $identifiers = array();
   $tokens = array();
   set_time_limit(0);
-  $urlParts = explode('?', $url);
-  $base_url = $urlParts[0] . "?verb=ListIdentifiers&resumptionToken=";
+  $url_parts = explode('?', $url);
+  $base_url = $url_parts[0] . "?verb=ListIdentifiers&resumptionToken=";
   $data = file_get_contents($url);
   if (!$data) {
-    drupal_set_message("No results returned - please check url and login credentials", 'warning');
+    drupal_set_message(t("No results returned - please check url and login credentials", 'warning'));
     return;
   }
   $dom = new DOMDocument();
@@ -24,18 +32,13 @@ function build_full_dom($url) {
   $token = $resumption_node->nodeValue;
   $tokens = 1;
   $new_identifiers = $dom->getElementsByTagName('identifier');
-  foreach ($new_identifiers as $new_identifier) {
-    //$identifiers[] = $new_identifier->nodeValue;
-  }
+
   while ($token) {
     $new_url = $base_url . $token;
     $data = file_get_contents($new_url);
     $sub_dom = new DOMDocument();
     $sub_dom->loadXML($data);
     $new_identifiers = $dom->getElementsByTagName('identifier');
-    foreach ($new_identifiers as $new_identifier) {
-      //$identifiers[] = $new_identifier->nodeValue;
-    }
     $resumption_node = $sub_dom->getElementsByTagName('resumptionToken')->item(0);
     $token = $resumption_node->nodeValue;
     $tokens++;
@@ -55,11 +58,11 @@ function build_full_dom($url) {
 function get_streams_from_entry($identifier) {
   module_load_include('inc', 'islandora_marcxml', 'includes/utilities');
   $url = "http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=GetRecord&identifier=$identifier&metadataPrefix=marc21";
-  $marcNS = "http://www.loc.gov/MARC21/slim";
+  $marc_NS = "http://www.loc.gov/MARC21/slim";
   $input = file_get_contents($url);
   $dom = new DOMDocument();
   $dom->loadXML($input);
-  $record_node = $dom->getElementsByTagNameNS($marcNS, 'record')->item(0);
+  $record_node = $dom->getElementsByTagNameNS($marc_NS, 'record')->item(0);
   $marc_record = $dom->saveXML($record_node);
   $mods_record = trim(agile_lcp_transform_with_saxonb('MARC21slim2MODS3-5_LCP.xsl', $marc_record));
   $dc_record = trim(agile_lcp_transform_with_saxonb('MARC21slim2MODS3-5_LCP.xsl', $marc_record));
@@ -88,12 +91,11 @@ function agile_lcp_run_xsl_transform($info) {
   $input->loadXML($info['input']);
   $processor = new XSLTProcessor();
   $processor->importStylesheet($xsl);
-  
   return @$processor->transformToXML($input);
 }
 
 /**
- * Gets pids from OAI identifier
+ * Gets pids from OAI identifier.
  *
  * @param string $identifier
  *   OAI identifier
@@ -121,7 +123,7 @@ function agile_lcp_get_pids_from_identifier($identifier) {
 }
 
 /**
- * Gets pids where more than one Islandora oject has same OAI identifier
+ * Gets pids where more than one Islandora oject has same OAI identifier.
  * 
  * @return array
  *   PIDS
@@ -142,7 +144,8 @@ function agile_lcp_get_duplicates() {
 
 /**
  * Helper to transform XML using the named XSLT with saxonb.
- *   Taken from DGI's lcpdora module with minro changes.
+ *
+ * Taken from DGI's lcpdora module with minor changes.
  *
  * @param string $xsl_name
  *   Name of the XSL file to be used, relative to this module's "xml"
@@ -199,7 +202,7 @@ function agile_lcp_transform_with_saxonb($xsl_name, $doc, $params = array()) {
 }
 
 /**
- * Get all pids from islandora:imported_oai collection
+ * Get all pids from islandora:imported_oai collection.
  */
 function agile_lcp_get_collection_pids() {
   $limit = 10000;

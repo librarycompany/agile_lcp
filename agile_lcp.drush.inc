@@ -40,8 +40,6 @@ function agile_lcp_drush_command() {
       'drush -u 1 OAI --limit=3',
     ),
   );
-
-
   $items['agile_OAI_prep_batch'] = array(
     'description' => dt('Preps batch process to harvest records from OAI stream.'),
     'options' => array(
@@ -105,7 +103,7 @@ function agile_lcp_drush_command() {
 }
 
 /**
- * Kicks off serises of sub-batches to harvest all OAI records from token,
+ * Kicks off serises of sub-batches to harvest all OAI records from token.
  */
 function drush_agile_lcp_agile_OAI_harvest_batch() {
   module_load_include('inc', 'agile_lcp', 'includes/db');
@@ -115,7 +113,7 @@ function drush_agile_lcp_agile_OAI_harvest_batch() {
 
   if ($new) {
     $limit--;
-    $batch ['operations'][] = array(
+    $batch['operations'][] = array(
       'agile_lcp_add_OAI_batch_worker',
       array(
         'token_id' => NULL,
@@ -131,7 +129,7 @@ function drush_agile_lcp_agile_OAI_harvest_batch() {
     drush_print(dt("There are only @count tokens left to process", array('@count' => $count)));
   }
   foreach ($tokens as $token_id => $token) {
-    $batch ['operations'][] = array(
+    $batch['operations'][] = array(
       'agile_lcp_add_OAI_batch_worker',
       array(
         'token_id' => $token_id,
@@ -150,8 +148,8 @@ function drush_agile_lcp_agile_OAI_harvest_batch() {
  * @param string $token_id
  *   token id
  * @param string $token
- *  resumption_token
- * @param type $context
+ *   resumption_token
+ * @param context $context
  *   Batch context.
  */
 function agile_lcp_add_OAI_batch_worker($token_id = NULL, $token = NULL, &$context) {
@@ -171,17 +169,17 @@ function agile_lcp_add_OAI_batch_worker($token_id = NULL, $token = NULL, &$conte
   $batch = array();
   $batch['operations'][] = array('agile_lcp_batch_notifier', array(
       'token_id' => $token_id,
-  ));
+    ));
   foreach ($new_identifiers as $new_identifier) {
     $batch['operations'][] = array('agile_lcp_drush_build_object', array(
         'identifier' => $new_identifier->nodeValue,
-    ));
+      ));
   }
   if ($token) {
     $batch['operations'][] = array('agile_lcp_drush_mark_token', array(
         'token_id' => $token_id,
         'token' => $token,
-    ));
+      ));
   }
   batch_set($batch);
 }
@@ -189,8 +187,8 @@ function agile_lcp_add_OAI_batch_worker($token_id = NULL, $token = NULL, &$conte
 /**
  * Builds and ingests islandora object for  OAI record.
  *
- * @param type $identifier
- *   UNique OAI identifier
+ * @param String $identifier
+ *   Unique OAI identifier
  */
 function agile_lcp_drush_build_object($identifier) {
   drush_print('.', 0, NULL, FALSE);
@@ -231,7 +229,7 @@ function agile_lcp_drush_build_object($identifier) {
 }
 
 /**
- * Output for feedback fro screen.
+ * Output for feedback for screen.
  *
  * @param strng $token_id
  *   OAI token
@@ -243,7 +241,10 @@ function agile_lcp_batch_notifier($token_id) {
 /**
  * Marks token as processed.
  *
+ * @param int $token_id
+ *   Unique identifier for token
  * @param string $token
+ *   Token being updated
  */
 function agile_lcp_drush_mark_token($token_id, $token) {
   drush_print("$token_id complete.");
@@ -256,7 +257,6 @@ function agile_lcp_drush_mark_token($token_id, $token) {
 
 /**
  * Adds all tokens from supplied URL to prepare for harvesting.
- *
  */
 function drush_agile_lcp_agile_OAI_prep_batch() {
   drush_print(dt("Adding to database -"));
@@ -271,8 +271,8 @@ function drush_agile_lcp_agile_OAI_prep_batch() {
     $url .= "&from=$from";
   }
   set_time_limit(0);
-  $urlParts = explode('?', $url);
-  $base_url = $urlParts[0] . "?verb=ListIdentifiers&resumptionToken=";
+  $url_parts = explode('?', $url);
+  $base_url = $url_parts[0] . "?verb=ListIdentifiers&resumptionToken=";
   $data = file_get_contents($url);
   if (!$data) {
     drush_print(dt("No results returned - please check url and login credentials"));
@@ -303,6 +303,9 @@ function drush_agile_lcp_agile_OAI_prep_batch() {
   drush_print(dt("\n Complete."));
 }
 
+/**
+ * Gets all collection pids for resource index.
+ */
 function drush_agile_lcp_agile_get_collection_pids() {
   $result = db_select('collection_pids', 'cp')
       ->fields('cp')
@@ -347,6 +350,9 @@ EOQ;
   drush_print("$count in database table - end");
 }
 
+/**
+ * One time funciton to remove processed PIDS from database table.
+ */
 function drush_agile_lcp_agile_remove_indexed_collection_pids() {
   $result = db_select('collection_pids', 'cp')
       ->fields('cp')
@@ -357,7 +363,7 @@ function drush_agile_lcp_agile_remove_indexed_collection_pids() {
   $file = "/tmp/collectionPIDS.txt";
   $handle = fopen($file, "r");
   if ($handle) {
-    while (($line = fgets($handle)) !== false) {
+    while (($line = fgets($handle)) !== FALSE) {
       $pid = trim($line);
       $query = db_update('collection_pids')
               ->condition('pid', $pid)
@@ -378,4 +384,3 @@ function drush_agile_lcp_agile_remove_indexed_collection_pids() {
   $count = $result->rowCount();
   drush_print("$count unindexed in database table - end");
 }
-    

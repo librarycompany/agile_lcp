@@ -2,20 +2,17 @@
 
 /**
  * @file
- * This file contains functions used to generate derivatives of implrted objects.
+ * This file contains functions used to generate derivatives.
  */
 
 /**
- * Creates the PROXY_MP3 derivative from the given audio file.
+ * Creates the derivatives.
  *
  * @param AbstractObject $object
  *   An AbstractObject representing an object in Fedora.
  *
  * @param bool $force
  *   Whether the derivative generation is being forced.
- *
- * @return array
- *   An array describing the outcome of the PROXY_MP3 creation.
  *
  * @see hook_islandora_derivative()
  */
@@ -56,10 +53,10 @@ function agile_lcp_create_derived_streams(AbstractObject $object, $force = FALSE
 }
 
 /**
- * Gets all required datastreams from identifier.
+ * Gets all required datastreams from marc.
  *
- * @param string $identifier
- *   OAI Identifier
+ * @param xml $marc_xml
+ *   MARC xml
  *
  * @return array
  *   Associative array of xmls to be ingested.

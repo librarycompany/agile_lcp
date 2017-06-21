@@ -39,7 +39,7 @@ function agile_lcp_prep_harvest($form, $form_state) {
     '#type' => 'textfield',
     '#title' => t('URL to initiate harvest'),
     '#default_value' => 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21',
-    '#size' =>90,
+    '#size' => 90,
   );
   $form['from'] = array(
     '#type' => 'textfield',
@@ -72,16 +72,16 @@ function agile_lcp_prep_harvest_submit($form, $form_state) {
   if ($form_state['values']['from'] != '') {
     $url .= "&from=" . $form_state['values']['from'];
   }
-    if ($form_state['values']['to'] != '') {
+  if ($form_state['values']['to'] != '') {
     $url .= "&to=" . $form_state['values']['to'];
   }
 
   set_time_limit(0);
-  $urlParts = explode('?', $url);
-  $base_url = $urlParts[0] . "?verb=ListIdentifiers&resumptionToken=";
+  $url_parts = explode('?', $url);
+  $base_url = $url_parts[0] . "?verb=ListIdentifiers&resumptionToken=";
   $data = file_get_contents($url);
   if (!$data) {
-    drupal_set_message("No results returned - please check url and login credentials", 'warning');
+    drupal_set_message(t("No results returned - please check url and login credentials", 'warning'));
     return;
   }
   $dom = new DOMDocument();

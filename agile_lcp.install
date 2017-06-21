@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Install functions.
+ */
 
 /**
  * Implements hook_install().
@@ -10,6 +14,9 @@ function agile_lcp_install() {
   islandora_install_solution_pack('agile_lcp');
 }
 
+/**
+ * Implements hook_schema().
+ */
 function agile_lcp_schema() {
   $schema['resumption_token'] = array(
     'description' => 'Table that stores saved configuration names.',

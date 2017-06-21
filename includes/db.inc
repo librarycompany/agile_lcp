@@ -1,7 +1,11 @@
 <?php
+/**
+ * @file
+ * DB utilities.
+ */
 
 /**
- * Adds new token to database
+ * Adds new token to database.
  * 
  * @param string $token
  *   token to add.
@@ -16,9 +20,9 @@ function agile_lcp_add_token($token) {
 }
 
 /**
- * Get next unprocessed token id
+ * Get next unprocessed token id.
  *
- * @return integer
+ * @return int
  *   token id
  */
 function agile_lcp_get_next_token_id() {
@@ -30,7 +34,7 @@ function agile_lcp_get_next_token_id() {
 }
 
 /**
- * Get last unproccessed token
+ * Get last unproccessed token.
  *
  * @return string
  *   token
@@ -48,7 +52,7 @@ function agile_lcp_get_last_token() {
 /**
  * Get token from id.
  *
- * @param integer $token_id
+ * @param int $token_id
  *   token_id
  * 
  * @return string
@@ -67,6 +71,7 @@ function agile_lcp_get_token_from_id($token_id) {
  * Marks token as processed.
  *
  * @param string $token
+ *   token being updated
  */
 function agile_lcp_update_token($token) {
   $query = db_update('resumption_token')
@@ -79,8 +84,9 @@ function agile_lcp_update_token($token) {
 /**
  * Gets series of unprocessed redemption tokens.
  * 
- * @param integer $limit
+ * @param int $limit
  *   number of ids to return
+ *
  * @return array
  *   associative array of token ids and tokens
  */
