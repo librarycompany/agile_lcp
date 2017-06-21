@@ -302,7 +302,8 @@ function agile_lcp_advanced_search_submit($form, &$form_state) {
  * Implements hook_form_alter().
  */
 function agile_lcp_form_islandora_collection_search_form_alter(&$form, &$form_state, $form_id) {
-  if ($_GET['q'] == 'islandora/object/islandora:discovery' || current_path() == 'node/31') {
+  $search_node = variable_get('agile_lcp_search_node_id', '31');
+  if ($_GET['q'] == 'islandora/object/islandora:discovery' || current_path() == "node/$search_node") {
     $options = array(
       'all' => t("All Collections"),
       'islandora:root' => t("Digital Collections"),
