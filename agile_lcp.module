@@ -34,6 +34,16 @@ function agile_lcp_menu() {
       'file' => 'includes/admin.form.inc',
       'type' => MENU_NORMAL_ITEM,
     ),
+
+   'islandora/object/%islandora_object/manage/datastreams/updatemxml' =>array(
+      'title' => 'Update MarcXML',
+      'file' => 'includes/marc_reingest.form.inc',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('agile_reingest_marc_form', 2),
+      'type' => MENU_LOCAL_ACTION,
+      'access callback' => 'islandora_object_access_callback',
+      'access arguments' => array(ISLANDORA_ADD_DS, 2),
+    ),
   );
 }
 
@@ -94,19 +104,21 @@ function agile_lcp_islandora_solr_results_alter(&$search_results, $query_process
         $identifier = $result['solr_doc']['mods_recordInfo_recordIdentifier_s'];
         $identifiers[$index] = $identifier;
         $is_oai = in_array('info:fedora/islandora:oai_importCModel', $result['content_models']);
-        $pairings[] = array('identifier' => $identifier, 'oai' => $is_oai);
+        $pairings[$index] = array('identifier' => $identifier, 'oai' => $is_oai);
 
         $matches[] = $identifier;
         if ($is_oai) {
-          $result['solr_doc']['mods_recordInfo_recordIdentifier_s'] = l($identifier, "http://pacscl.exlibrisgroup.com:48992/F?func=direct&doc_number=$identifier");
+          $result['solr_doc']['mods_recordInfo_recordIdentifier_s'] = l('View item record in the book catalog' /* $identifier */, "http://pacscl.exlibrisgroup.com:48992/F?func=direct&doc_number=$identifier");
           $result['object_url'] = "http://pacscl.exlibrisgroup.com:48992/F?func=direct&doc_number=$identifier";
         }
         else {
           unset($result['solr_doc']['mods_recordInfo_recordIdentifier_s']);
+          $result['solr_doc']['mods_recordInfo_recordIdentifier_s'] = l('View item record in the book catalog' /* $identifier */, "http://pacscl.exlibrisgroup.com:48992/F?func=direct&doc_number=$identifier");
         }
       }
       if (isset($result['solr_doc']['dc.description'])) {
         $is_collection = in_array('info:fedora/islandora:collectionCModel', $result['content_models']);
+        /* We only want to display the description field on collection records. Remove it from the results of other content models. */
         if (!$is_collection) {
           unset($result['solr_doc']['dc.description']);
         }
@@ -120,7 +132,7 @@ function agile_lcp_islandora_solr_results_alter(&$search_results, $query_process
     }
   }
 
-  if ($doubles) {
+/*  if ($doubles) {
     foreach ($doubles as $index => $identifier) {
       if (in_array($identifier, $doubles)) {
         foreach ($pairings as $key => $params) {
@@ -130,7 +142,7 @@ function agile_lcp_islandora_solr_results_alter(&$search_results, $query_process
         }
       }
     }
-  }
+  }*/
   $search_results = array_values($search_results);
 }
 
@@ -379,4 +391,22 @@ function agile_lcp_islandora_solr_primary_display() {
       'description' => t("Add Selected Results to Coursepack"),
     ),
   );
+}
+
+/**
+ * Implements hook_islandora_object_ingested()
+ */
+function agile_lcp_islandora_object_ingested(AbstractObject $object) {
+  // If oai object exists with same identifier then delete it.
+  module_load_include('inc', 'agile_lcp', 'includes/utilities');
+  if (!in_array('islandora:oai_importCModel', $object->models)) {
+    $identifier = agile_lcp_get_identifier_from_marc($object);
+    if ($identifier) {
+      $oai_pids = agile_lcp_get_oai_objects_from_identifier($identifier);
+      foreach ($oai_pids as $oai_pid) {
+        $oai_object = islandora_object_load($oai_pid);
+        $oai_object->delete();
+      }
+    }
+  }
 }

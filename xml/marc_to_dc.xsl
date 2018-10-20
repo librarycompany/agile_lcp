@@ -45,30 +45,42 @@
 					</xsl:for-each>
 					<xsl:for-each select="marc:datafield[@tag=245]">
 						<dc:title>
-							<xsl:call-template name="subfieldSelect">
-								<xsl:with-param name="codes">abcfghknps68</xsl:with-param>
-							</xsl:call-template>
+							<xsl:variable name="title">
+								<xsl:call-template name="subfieldSelect">
+									<xsl:with-param name="codes">abcfghknps68</xsl:with-param>
+								</xsl:call-template>
+							</xsl:variable>
+							<xsl:value-of select="replace(replace($title, '\[\[', ''), '\]\]', '')" />
 						</dc:title>
 					</xsl:for-each>
 					<xsl:for-each select="marc:datafield[@tag=242]">
 						<dc:title>
-							<xsl:call-template name="subfieldSelect">
-								<xsl:with-param name="codes">abchnpy68</xsl:with-param>
-							</xsl:call-template>
+							<xsl:variable name="title">
+								<xsl:call-template name="subfieldSelect">
+									<xsl:with-param name="codes">abchnpy68</xsl:with-param>
+								</xsl:call-template>
+							</xsl:variable>
+							<xsl:value-of select="replace(replace($title, '\[\[', ''), '\]\]', '')" />
 						</dc:title>
 					</xsl:for-each>
 					<xsl:for-each select="marc:datafield[@tag=246]">
 						<dc:title>
-							<xsl:call-template name="subfieldSelect">
-								<xsl:with-param name="codes">abfghinp568</xsl:with-param>
-							</xsl:call-template>
+							<xsl:variable name="title">
+								<xsl:call-template name="subfieldSelect">
+									<xsl:with-param name="codes">abfghinp568</xsl:with-param>
+								</xsl:call-template>
+							</xsl:variable>
+							<xsl:value-of select="replace(replace($title, '\[\[', ''), '\]\]', '')" />
 						</dc:title>
 					</xsl:for-each>
 					<xsl:for-each select="marc:datafield[@tag=730]|marc:datafield[@tag=740]">
 						<dc:title>
-							<xsl:call-template name="subfieldSelect">
-								<xsl:with-param name="codes">abfghinp568</xsl:with-param>
-							</xsl:call-template>
+							<xsl:variable name="title">
+								<xsl:call-template name="subfieldSelect">
+									<xsl:with-param name="codes">abfghinp568</xsl:with-param>
+								</xsl:call-template>
+							</xsl:variable>
+							<xsl:value-of select="replace(replace($title, '\[\[', ''), '\]\]', '')" />
 						</dc:title>
 					</xsl:for-each>
 					<xsl:for-each select="marc:datafield[@tag=260]">
@@ -85,7 +97,7 @@
 						<xsl:if test="$pub2 != ''">
 							<dc:publisher>
 								<xsl:value-of select="$pub2"/>
-								<xsl:if test="substring($pub2, 1, 1) = '[' and substring($pub2, string-length($pub2), 1) != ']'">
+								<xsl:if test="contains($pub2, '[') and not(contains($pub2, ']'))">
 									<xsl:text>]</xsl:text>
 								</xsl:if>
 							</dc:publisher>
@@ -152,7 +164,7 @@
 									<xsl:with-param name="chopString" select="."/>
 								</xsl:call-template>
 							</xsl:variable>
-							<xsl:if test="substring($dat, 1, 1) != '[' and substring($dat, string-length($dat), 1) = ']'">
+							<xsl:if test="contains($dat, ']') and not(contains($dat, '['))">
 								<xsl:text>[</xsl:text>
 							</xsl:if>
 							<xsl:value-of select="$dat"/>
@@ -450,8 +462,9 @@
 			<advancedProp name="sInitialTemplate" value=""/>
 			<advancedProp name="sInitialMode" value=""/>
 		</scenario>
-		<scenario default="yes" name="SelectedMarc" userelativepaths="yes" externalpreview="no" url="SelectedMarc.xml" htmlbaseurl="" outputurl="" processortype="saxon8" useresolver="no" profilemode="0" profiledepth="" profilelength="" urlprofilexml=""
-		          commandline="" additionalpath="" additionalclasspath="" postprocessortype="none" postprocesscommandline="" postprocessadditionalpath="" postprocessgeneratedext="" validateoutput="no" validator="internal" customvalidator="">
+		<scenario default="yes" name="SelectedMarc" userelativepaths="no" externalpreview="no" url="file:///c:/projects/lcp/lcp-metadata-transformation-stylesheets/MARC to MODS/SelectedMarc.xml" htmlbaseurl="" outputurl="" processortype="saxon8"
+		          useresolver="no" profilemode="0" profiledepth="" profilelength="" urlprofilexml="" commandline="" additionalpath="" additionalclasspath="" postprocessortype="none" postprocesscommandline="" postprocessadditionalpath=""
+		          postprocessgeneratedext="" validateoutput="no" validator="internal" customvalidator="">
 			<advancedProp name="bSchemaAware" value="false"/>
 			<advancedProp name="xsltVersion" value="2.0"/>
 			<advancedProp name="schemaCache" value="||"/>

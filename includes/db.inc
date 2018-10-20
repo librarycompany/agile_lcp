@@ -50,6 +50,22 @@ function agile_lcp_get_last_token() {
 }
 
 /**
+ * Get last proccessed token.
+ *
+ * @return string
+ *   token
+ */
+function agile_lcp_get_last_processed_token() {
+  $query = db_select('resumption_token', 'rt')
+      ->condition('processed', 1)
+      ->fields('rt', array('token'))
+      ->orderBy('token_id', 'DESC')
+      ->range(0,1);
+  $token = $query->execute()->fetchField();
+  return $token;
+}
+
+/**
  * Get token from id.
  *
  * @param int $token_id

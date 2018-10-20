@@ -16,8 +16,6 @@
  *   DOMDocument
  */
 function build_full_dom($url) {
-  $identifiers = array();
-  $tokens = array();
   set_time_limit(0);
   $url_parts = explode('?', $url);
   $base_url = $url_parts[0] . "?verb=ListIdentifiers&resumptionToken=";
@@ -31,15 +29,13 @@ function build_full_dom($url) {
   $resumption_node = $dom->getElementsByTagName('resumptionToken')->item(0);
   $token = $resumption_node->nodeValue;
   $tokens = 1;
-  $new_identifiers = $dom->getElementsByTagName('identifier');
-
   while ($token) {
     $new_url = $base_url . $token;
     $data = file_get_contents($new_url);
     $sub_dom = new DOMDocument();
     $sub_dom->loadXML($data);
-    $new_identifiers = $dom->getElementsByTagName('identifier');
-    $resumption_node = $sub_dom->getElementsByTagName('resumptionToken')->item(0);
+    $resumption_node = $sub_dom->getElementsByTagName('resumptionToken')
+      ->item(0);
     $token = $resumption_node->nodeValue;
     $tokens++;
   }
@@ -55,22 +51,30 @@ function build_full_dom($url) {
  * @return array
  *   Associative array of xmls to be ingested.
  */
-function get_streams_from_entry($identifier) {
+
+function agile_get_streams_from_entry($identifier) {
+  // Remove OAI qualifier from MARC identifier.
+  $identifier = preg_replace('/oai:pacscl.hosted.exlibrisgroup.com:LCP01-/', '', $identifier);
   module_load_include('inc', 'islandora_marcxml', 'includes/utilities');
-  $url = "http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=GetRecord&identifier=$identifier&metadataPrefix=marc21";
+  $url = "http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=GetRecord&identifier=oai:pacscl.hosted.exlibrisgroup.com:LCP01-$identifier&metadataPrefix=marc21";
   $marc_NS = "http://www.loc.gov/MARC21/slim";
   $input = file_get_contents($url);
   $dom = new DOMDocument();
   $dom->loadXML($input);
+  $deleted = $dom->getElementsByTagName('header')->item(0)->getAttribute('status') == 'deleted';
+  if ($deleted) {
+    return NULL;
+  }
   $record_node = $dom->getElementsByTagNameNS($marc_NS, 'record')->item(0);
   $marc_record = $dom->saveXML($record_node);
   $mods_record = trim(agile_lcp_transform_with_saxonb('MARC21slim2MODS3-5_LCP.xsl', $marc_record));
-  $dc_record = trim(agile_lcp_transform_with_saxonb('MARC21slim2MODS3-5_LCP.xsl', $marc_record));
-  return array(
+  $dc_record = trim(agile_lcp_transform_with_saxonb('marc_to_dc.xsl', $marc_record));
+  return [
     'MODS' => $mods_record,
     'DC' => $dc_record,
     'MARC' => $marc_record,
-  );
+  ];
+
 }
 
 /**
@@ -103,43 +107,60 @@ function agile_lcp_run_xsl_transform($info) {
  * @return array
  *   Array of pids
  */
-function agile_lcp_get_pids_from_identifier($identifier) {
+function agile_lcp_get_pids_from_identifier($identifier, $oai_only = FALSE) {
+  // Remove OAI qualifier from MARC identifier.
+  $identifier = preg_replace('/oai:pacscl.hosted.exlibrisgroup.com:LCP01-/', '', $identifier);
+  $pids = [];
+  if (!is_numeric($identifier)) {
+    drush_print(" Identifier $identifier is not numeric.");
+    return $pids;
+  }
+  $qualifier = $oai_only ? '+RELS_EXT_hasModel_uri_s:"info:fedora/islandora:oai_importCModel"' : '';
   $query_processor = new IslandoraSolrQueryProcessor();
-  $query_processor->solrQuery = "mods_recordInfo_recordIdentifier_s:$identifier";
+  $query_processor->solrQuery = "+mods_recordInfo_recordIdentifier_s:$identifier $qualifier";
   $query_processor->solrStart = 0;
   $query_processor->solrLimit = 10;
-  $query_processor->solrParams = array(
+
+  $query_processor->solrParams = [
     'fl' => "PID",
-  );
+  ];
   $query_processor->executeQuery(FALSE);
   $solr_results = $query_processor->islandoraSolrResult;
-  $pids = array();
+
   if ($solr_results['response']['objects']) {
     foreach ($solr_results['response']['objects'] as $object) {
+      $pid = $object['PID'];
+      drush_print(" Found existing object $pid.");
       $pids[] = $object['PID'];
     }
+  } else {
+    drush_print(" No matching objects found.");
   }
   return $pids;
 }
 
 /**
- * Gets pids where more than one Islandora oject has same OAI identifier.
- * 
+ * Gets pids where more than one Islandora object has same OAI identifier.
+ *
  * @return array
  *   PIDS
  */
 function agile_lcp_get_duplicates() {
-  $query = 'mods_recordInfo_recordIdentifier_s:* and RELS_EXT_hasModel_uri_s:"info:fedora/islandora:oai_importCModel"';
+  $query = 'mods_recordInfo_recordIdentifier_s:*';
   $qp = new IslandoraSolrQueryProcessor();
   $qp->buildQuery('*:*');
   $qp->solrParams['fq'] = $query;
   $qp->solrParams['facet'] = 'true';
-  $qp->solrParams['facet.limit'] = 200;
+  $qp->solrParams['facet.limit'] = 500;
   $qp->solrParams['facet.mincount'] = 2;
-  $qp->solrParams['facet.field'] = array('mods_recordInfo_recordIdentifier_s', 'RELS_EXT_hasModel_uri_s');
+  $qp->solrParams['facet.field'] = [
+    'mods_recordInfo_recordIdentifier_s',
+    'RELS_EXT_hasModel_uri_s',
+  ];
   $qp->solrParams['fl'] = 'PID mods_recordInfo_recordIdentifier_s';
   $qp->executeQuery(FALSE);
-  return $qp->islandoraSolrResult['facet_counts']['facet_fields']['mods_recordInfo_recordIdentifier_s'];
+  $identifiers = array_keys($qp->islandoraSolrResult['facet_counts']['facet_fields']['mods_recordInfo_recordIdentifier_s']);
+  return $identifiers;
 }
 
 /**
@@ -159,47 +180,44 @@ function agile_lcp_get_duplicates() {
  * @return string
  *   The transformed xml.
  */
-function agile_lcp_transform_with_saxonb($xsl_name, $doc, $params = array()) {
+function agile_lcp_transform_with_saxonb($xsl_name, $doc, $params = []) {
   $module_path = drupal_get_path('module', 'agile_lcp');
-  $xsl_path = format_string('!path/xml/!xsl', array(
+  $xsl_path = format_string('!path/xml/!xsl', [
     '!path' => $module_path,
     '!xsl' => $xsl_name,
-  ));
-
-  $pipes = array();
+  ]);
+  $pipes = [];
   $equal_join_and_escape = function ($key, $value) {
     return escapeshellarg("$key=$value");
   };
   $escaped = array_map($equal_join_and_escape, array_keys($params), $params);
   $param_string = implode(' ', $escaped);
-
   $process = proc_open("saxonb-xslt -versionmsg:off - $xsl_path $param_string",
-    array(
-      0 => array(
+    [
+      0 => [
         'pipe',
         'r',
-      ),
-      1 => array(
+      ],
+      1 => [
         'pipe',
         'w',
-      ),
-      2 => array(
+      ],
+      2 => [
         'file',
         '/dev/null',
         'a',
-      ),
-    ),
+      ],
+    ],
     $pipes
   );
-
   fwrite($pipes[0], $doc);
   fclose($pipes[0]);
   $saxonb_transformed = stream_get_contents($pipes[1]);
   fclose($pipes[1]);
   proc_close($process);
-
   return $saxonb_transformed;
 }
+
 
 /**
  * Get all pids from islandora:imported_oai collection.
@@ -224,11 +242,126 @@ EOQ;
     $results = $tuque->repository->ri->sparqlQuery($query);
     foreach ($results as $result) {
       $nid = db_insert('collection_pids')
-          ->fields(array(
-            'pid' => $result['pid']['value'],
-            'indexed' => 0,
-          ))
-          ->execute();
+        ->fields([
+          'pid' => $result['pid']['value'],
+          'indexed' => 0,
+        ])
+        ->execute();
     }
   }
+}
+
+
+/**
+ * @param \AbstractObject $Object
+ */
+function agile_update_marcXML($object, $identifier) {
+  $streams = agile_get_streams_from_entry($identifier);
+  // Allow MARC content for objects without existing MarcXML.
+  foreach ($streams as $key => $content) {
+    if ($key == "MARC" && !$object['MARC']) {
+      $ds = $object->constructDatastream('MARC', 'M');
+      $ds->label = 'MARC';
+      $ds->mimetype = 'text/xml';
+      $ds->content = $content;
+      $object->ingestDatastream($ds);
+      continue;
+    }
+    $object[$key]->content = $content;
+  }
+  drupal_set_message(t('Updated records'));
+}
+
+/**
+ * @param \AbstractObject $object
+ *
+ * @return string
+ */
+function agile_lcp_get_identifier_from_marc(AbstractObject $object) {
+  if (!$object['MARC']) {
+    return NULL;
+  }
+  $marc = $object['MARC']->content;
+  $dom = new DOMDocument();
+  $dom->loadXML($marc);
+  $xpath = new DOMXPath($dom);
+  $xpath->registerNamespace('marc', "http://www.loc.gov/MARC21/slim");
+  $query = "//marc:controlfield[@tag = '001']";
+  $identifiers = $xpath->query($query);
+  if ($identifiers->length) {
+    return $identifiers->item(0)->nodeValue;
+  }
+  return NULL;
+}
+
+
+/**
+ * @param string $identifier
+ *
+ * @return array|null
+ */
+function agile_lcp_get_duplicates_from_identifier(string $identifier) {
+  $query_processor = new IslandoraSolrQueryProcessor();
+  $query_processor->solrQuery = "mods_recordInfo_recordIdentifier_s:$identifier";
+  $query_processor->solrStart = 0;
+  $query_processor->solrLimit = 100;
+  $query_processor->solrParams = [
+    'fl' => "PID RELS_EXT_hasModel_uri_s",
+  ];
+  $query_processor->executeQuery(FALSE);
+  $solr_results = $query_processor->islandoraSolrResult;
+  $pids = [];
+  $pids_to_delete = [];
+  if ($solr_results['response']['objects']) {
+    foreach ($solr_results['response']['objects'] as $object) {
+      $content_model = $object['solr_doc']['RELS_EXT_hasModel_uri_s'];
+      if ($content_model == 'info:fedora/islandora:oai_importCModel') {
+        $pids_to_delete[] = $object['PID'];
+      }
+      $pids[] = $object['PID'];
+    }
+  }
+  return count($pids) > count($pids_to_delete) ? $pids_to_delete : NULL;
+
+}
+
+
+/**
+ * @param $identifier
+ *
+ * @return array
+ */
+function agile_lcp_get_oai_objects_from_identifier($identifier = NULL) {
+  $query_processor = new IslandoraSolrQueryProcessor();
+  $query_processor->solrQuery = "+mods_recordInfo_recordIdentifier_s:$identifier +RELS_EXT_hasModel_uri_s:\"info:fedora/islandora:oai_importCModel\" ";
+  $query_processor->solrStart = 0;
+  $query_processor->solrLimit = 100;
+  $query_processor->solrParams = [
+    'fl' => "PID RELS_EXT_hasModel_uri_s",
+  ];
+  $query_processor->executeQuery(FALSE);
+  $oai_pids = [];
+  $solr_results = $query_processor->islandoraSolrResult;
+  foreach ($solr_results['response']['objects'] as $object) {
+    $oai_pids[] = $object['PID'];
+  }
+  return $oai_pids;
+}
+
+function agile_lcp_find_empty_objects() {
+  $query_processor = new IslandoraSolrQueryProcessor();
+  $query_processor->solrQuery = '-mods_titleInfo_title_s:* +fedora_datastreams_ms:MODS +RELS_EXT_hasModel_uri_s:"info:fedora/islandora:oai_importCModel"';
+  $query_processor->solrStart = 0;
+  $query_processor->solrLimit = 100;
+  $query_processor->solrParams = [
+    'fl' => "PID",
+  ];
+  $query_processor->executeQuery(FALSE);
+  $pids = [];
+  $solr_results = $query_processor->islandoraSolrResult;
+  foreach ($solr_results['response']['objects'] as $object) {
+    $pids[] = $object['PID'];
+  }
+
+  return $pids;
 }

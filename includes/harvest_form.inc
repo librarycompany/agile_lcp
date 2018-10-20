@@ -99,7 +99,19 @@ function agile_lcp_harvest_form_submit($form, &$form_state) {
  */
 function agile_lcp_build_object($identifier) {
   module_load_include('inc', 'agile_lcp', 'includes/utilities');
-  $streams = get_streams_from_entry($identifier);
+  $existing = agile_lcp_get_pids_from_identifier($identifier);
+  $streams = agile_get_streams_from_entry($identifier);
+  if ($existing) {
+    foreach ($existing as $pid) {
+      $object = islandora_object_load($pid);
+      foreach ($streams as $dsid => $content) {
+        if ($object[$dsid]) {
+          $object[$dsid]->content = $content;
+        }
+      }
+    }
+    return;
+  }
   $tuque = new IslandoraTuque();
   $repository = $tuque->repository;
   $object = $repository->constructObject('islandora');

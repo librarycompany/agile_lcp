@@ -19,123 +19,191 @@ function agile_lcp_drush_help($command) {
  * Implements hook_drush_command().
  */
 function agile_lcp_drush_command() {
-  $items = array();
-  $items['agile_OAI_harvest_batch'] = array(
+  $items = [];
+
+  $items['agile_OAI_harvest_batch'] = [
     'description' => dt('Harvests records from OAI stream.'),
-    'options' => array(
-      'limit' => array(
+    'options' => [
+      'limit' => [
         'description' => dt('The number of batches to process.  Defaults to 1'),
         'required' => FALSE,
-      ),
-      'new' => array(
+      ],
+      'new' => [
         'description' => dt('Whether this is the first run of the harvest, Defaults to FALSE'),
         'required' => FALSE,
-      ),
-    ),
-    'aliases' => array('OAI'),
-    'drupal dependencies' => array(
+      ],
+    ],
+    'aliases' => ['OAI'],
+    'drupal dependencies' => [
       'islandora',
-    ),
-    'examples' => array(
+    ],
+    'examples' => [
       'drush -u 1 OAI --limit=3',
-    ),
-  );
-  $items['agile_OAI_prep_batch'] = array(
+    ],
+  ];
+
+  $items['agile_OAI_harvest_one'] = [
+    'description' => dt('Harvests one record from the OAI source.'),
+    'options' => [
+      'identifier' => [
+        'description' => dt('The system number of the MARC record to harvest from OIA.'),
+        'required' => TRUE,
+      ],
+    ],
+    'aliases' => ['OAI_1'],
+    'drupal dependencies' => [
+      'islandora',
+    ],
+    'examples' => [
+      'drush -u 1 OAI_1 --identifier=000197559'
+    ]
+  ];
+
+  $items['agile_OAI_prep_batch'] = [
     'description' => dt('Preps batch process to harvest records from OAI stream.'),
-    'options' => array(
-      'url' => array(
+    'options' => [
+      'url' => [
         'value' => 'optional',
         'description' => dt("The url to initiate harvesting.  Defaults to 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21'"),
-      ),
-      'from' => array(
+      ],
+      'reset' => [
+        'description' => dt("Set to 1 if you want to restart the harvest using the parameters; otherwise the harvest will continue where it last left off."),
+        'required' => FALSE,
+      ],
+      'from' => [
         'description' => dt("Datestamp of first harvested object - optional (YYYY-MM-DD)"),
         'required' => FALSE,
-      ),
-      'to' => array(
+      ],
+      'to' => [
         'description' => dt("Datestamp of first harvested object - optional (YYYY-MM-DD)"),
         'required' => FALSE,
-      ),
-    ),
-    'drupal dependencies' => array(
+      ],
+    ],
+    'drupal dependencies' => [
       'islandora',
-    ),
-    'examples' => array(
+    ],
+    'examples' => [
       'drush -u 1 OAI_Prep',
-    ),
-    'aliases' => array('OAI_Prep'),
-  );
+    ],
+    'aliases' => ['OAI_Prep'],
+  ];
 
-  $items['agile_get_collection_pids'] = array(
+  $items['agile_get_collection_pids'] = [
     'description' => dt('Gets and records OAI collection PIDS.'),
-    'options' => array(
-      'limit' => array(
+    'options' => [
+      'limit' => [
         'description' => dt("Number of records to retrieve at once"),
         'required' => FALSE,
-      ),
-      'iterations' => array(
+      ],
+      'iterations' => [
         'description' => dt("number of times to iterate"),
         'required' => FALSE,
-      ),
-    ),
-    'drupal dependencies' => array(
+      ],
+    ],
+    'drupal dependencies' => [
       'islandora',
-    ),
-    'examples' => array(
-      'drush -u 1 get_collection_pids',
-    ),
-    'aliases' => array('GCP'),
-  );
-  $items['agile_remove_indexed_collection_pids'] = array(
+    ],
+    'examples' => [
+      'drush -u 1 get_collection_pids --limit=10',
+    ],
+    'aliases' => ['GCP'],
+  ];
+  $items['agile_remove_indexed_collection_pids'] = [
     'description' => dt('Removes already indexed pids from database.'),
-    'examples' => array(
+    'examples' => [
       'drush -u 1 UCPT',
-    ),
-    'aliases' => array('UCPT'),
-  );
-  $items['agile_activate'] = array(
+    ],
+    'aliases' => ['UCPT'],
+  ];
+  $items['agile_activate'] = [
     'description' => dt('Activates objects from file'),
-    'examples' => array(
+    'examples' => [
       'drush -u 1 AA',
-    ),
-    'aliases' => array('AA'),
-  );
+    ],
+    'aliases' => ['AA'],
+  ];
+  $items['agile_lcp_solr_reindex'] = [
+    'description' => dt('Reindexes PIDS from RI to solr'),
+    'options' => [
+      'iterations' => [
+        'description' => dt("number of times to iterate"),
+        'required' => FALSE,
+      ],
+    ],
+    'drupal dependencies' => [
+      'islandora',
+    ],
+    'examples' => [
+      'drush -u 1 SOLR_INDEX --limit=10',
+    ],
+    'aliases' => ['SOLR_INDEX'],
+  ];
+  $items['mark_solr_pids'] = [
+    'description' => dt('Takes all pids form solr and updates cp table'),
+    'drupal dependencies' => [
+      'islandora',
+    ],
+    'examples' => [
+      'drush -u 1 mark_solr',
+    ],
+    'aliases' => ['mark_solr'],
+  ];
+  $items['remove_duplicates'] = [
+    'description' => dt('Removes duplicated OAI objects'),
+    'drupal dependencies' => [
+      'islandora',
+    ],
+    'examples' => [
+      'drush -u 1 remove_dupes',
+    ],
+    'aliases' => ['remove_dupes'],
+
+  ];
   return $items;
 }
 
+function drush_agile_lcp_agile_OAI_harvest_one() {
+  $identifier = drush_get_option('identifier', '');
+
+  if ($identifier != '') {
+    agile_lcp_drush_build_object($identifier);
+  }
+}
+
 /**
- * Kicks off serises of sub-batches to harvest all OAI records from token.
+ * Kicks off series of sub-batches to harvest all OAI records from token.
  */
 function drush_agile_lcp_agile_OAI_harvest_batch() {
   module_load_include('inc', 'agile_lcp', 'includes/db');
-  $batch = array();
+  $batch = [];
   $limit = drush_get_option('limit', 1);
   $new = drush_get_option('new', FALSE);
 
   if ($new) {
     $limit--;
-    $batch['operations'][] = array(
+    $batch['operations'][] = [
       'agile_lcp_add_OAI_batch_worker',
-      array(
+      [
         'token_id' => NULL,
         'token' => NULL,
-      ),
-    );
+      ],
+    ];
   }
 
   $tokens = agile_lcp_get_unproccessed_tokens($limit);
   $count = count($tokens);
   if ($count < $limit) {
     $limit = count($tokens);
-    drush_print(dt("There are only @count tokens left to process", array('@count' => $count)));
+    drush_print(dt("There are only @count tokens left to process", ['@count' => $count]));
   }
   foreach ($tokens as $token_id => $token) {
-    $batch['operations'][] = array(
+    $batch['operations'][] = [
       'agile_lcp_add_OAI_batch_worker',
-      array(
+      [
         'token_id' => $token_id,
         'token' => $token,
-      ),
-    );
+      ],
+    ];
   }
   drush_print("Start batch. Processing $limit tokens");
   batch_set($batch);
@@ -143,8 +211,8 @@ function drush_agile_lcp_agile_OAI_harvest_batch() {
 }
 
 /**
- * KIcks off sub_batch.
- * 
+ * Kicks off sub_batch.
+ *
  * @param string $token_id
  *   token id
  * @param string $token
@@ -166,34 +234,76 @@ function agile_lcp_add_OAI_batch_worker($token_id = NULL, $token = NULL, &$conte
   $dom->loadXML($input);
   $new_identifiers = $dom->getElementsByTagName('identifier');
 
-  $batch = array();
-  $batch['operations'][] = array('agile_lcp_batch_notifier', array(
+  $batch = [];
+  $batch['operations'][] = [
+    'agile_lcp_batch_notifier',
+    [
       'token_id' => $token_id,
-    ));
+      'token' => $token,
+    ],
+  ];
   foreach ($new_identifiers as $new_identifier) {
-    $batch['operations'][] = array('agile_lcp_drush_build_object', array(
+    $batch['operations'][] = [
+      'agile_lcp_drush_build_object',
+      [
         'identifier' => $new_identifier->nodeValue,
-      ));
+      ],
+    ];
   }
   if ($token) {
-    $batch['operations'][] = array('agile_lcp_drush_mark_token', array(
+    $batch['operations'][] = [
+      'agile_lcp_drush_mark_token',
+      [
         'token_id' => $token_id,
         'token' => $token,
-      ));
+      ],
+    ];
   }
   batch_set($batch);
 }
 
 /**
- * Builds and ingests islandora object for  OAI record.
+ * Builds and ingests islandora object for OAI record.
  *
- * @param String $identifier
+ * @param string $identifier
  *   Unique OAI identifier
  */
-function agile_lcp_drush_build_object($identifier) {
+function agile_lcp_drush_build_object(string $identifier) {
   drush_print('.', 0, NULL, FALSE);
   module_load_include('inc', 'agile_lcp', 'includes/utilities');
-  $streams = get_streams_from_entry($identifier);
+
+  $streams = agile_get_streams_from_entry($identifier);
+  $existing = agile_lcp_get_pids_from_identifier($identifier);
+  // Streams are not returned if OAI record has been deleted.
+  if (!$streams) {
+    if(!$existing) {
+      drush_print(" Record $identifier has deleted status.  Not added");
+    }
+    else {
+      // Remove current OAI records, if record has been deleted since original ingest.
+      $oai_records = agile_lcp_get_pids_from_identifier($identifier, TRUE);
+      $tuque = new IslandoraTuque();
+      foreach ($oai_records as $pid) {
+        $tuque->repository->purgeObject($pid);
+        drush_print(" Object $pid  with identifier $identifier has been deleted.");
+      }
+    }
+    return;
+  }
+
+  if ($existing ) {
+    foreach ($existing as $pid) {
+      $object = islandora_object_load($pid);
+      foreach ($streams as $dsid => $content) {
+        if ($object[$dsid]) {
+          $object[$dsid]->content = $content;
+        }
+      }
+    }
+    drush_print("Updated $pid.  Identifier = $identifier");
+    return;
+  }
+
   $tuque = new IslandoraTuque();
   $repository = $tuque->repository;
   $object = $repository->constructObject('islandora');
@@ -211,19 +321,18 @@ function agile_lcp_drush_build_object($identifier) {
   $object->label = $label;
   foreach ($streams as $dsid => $content) {
     $type = ($dsid == 'DC') ? 'X' : 'M';
-    $mine = ($dsid == 'DC') ? 'text/xml' : 'application/xml';
-    $ds = $object->constructDatastream($dsid, 'M');
+    $mime = ($dsid == 'DC') ? 'text/xml' : 'application/xml';
+    $ds = $object->constructDatastream($dsid, $type);
     $ds->setContentFromString($content, FALSE);
-    $mime_detect = new MimeDetect();
     $ds->label = $dsid;
-    $ds->mimetype = 'text/xml';
+    $ds->mimetype = $mime;
     $object->ingestDatastream($ds);
   }
 
   try {
     islandora_add_object($object);
-  }
-  catch (Exception $ex) {
+    drush_print("Added {$object->id}.  Identifier = $identifier");
+  } catch (Exception $ex) {
     drush_print("Failed to ingest $identifier");
   }
 }
@@ -231,11 +340,11 @@ function agile_lcp_drush_build_object($identifier) {
 /**
  * Output for feedback for screen.
  *
- * @param strng $token_id
+ * @param string $token_id
  *   OAI token
  */
-function agile_lcp_batch_notifier($token_id) {
-  drush_print("\n Start sub_batch - Processing token #$token_id");
+function agile_lcp_batch_notifier($token_id, $token) {
+  drush_print("\n Start sub_batch - Processing token #$token_id - $token");
 }
 
 /**
@@ -249,10 +358,10 @@ function agile_lcp_batch_notifier($token_id) {
 function agile_lcp_drush_mark_token($token_id, $token) {
   drush_print("$token_id complete.");
   $query = db_update('resumption_token')
-          ->condition('token', $token)
-          ->fields(array(
-            'processed' => 1,
-          ))->execute();
+    ->condition('token', $token)
+    ->fields([
+      'processed' => 1,
+    ])->execute();
 }
 
 /**
@@ -264,6 +373,7 @@ function drush_agile_lcp_agile_OAI_prep_batch() {
   $url = drush_get_option('url', 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21');
   $to = drush_get_option('to', FALSE);
   $from = drush_get_option('from', FALSE);
+  $reset = drush_get_option('reset', FALSE);
   if ($to) {
     $url .= "&to=$to";
   }
@@ -273,15 +383,26 @@ function drush_agile_lcp_agile_OAI_prep_batch() {
   set_time_limit(0);
   $url_parts = explode('?', $url);
   $base_url = $url_parts[0] . "?verb=ListIdentifiers&resumptionToken=";
-  $data = file_get_contents($url);
-  if (!$data) {
-    drush_print(dt("No results returned - please check url and login credentials"));
-    return;
+
+  if ($reset == '1') {
+    // Load the initial URL to get the first resumption token; note that this doesn't process the first set of records!
+    $data = file_get_contents($url);
+    if (!$data) {
+      drush_print(dt("No results returned - please check url and login credentials"));
+      return;
+    }
+    $dom = new DOMDocument();
+    $dom->loadXML($data);
+    $resumption_node = $dom->getElementsByTagName('resumptionToken')->item(0);
+    $token = $resumption_node ? $resumption_node->nodeValue : NULL;
+  } else {
+    // get the last resumption token from the database
+    $token = agile_lcp_get_last_processed_token();
+    // need to reprocess this token, because it could have additional records in this set
+    agile_lcp_add_token($token);
+    drush_print("Resuming from last token in database: $token.");
   }
-  $dom = new DOMDocument();
-  $dom->loadXML($data);
-  $resumption_node = $dom->getElementsByTagName('resumptionToken')->item(0);
-  $token = $resumption_node->nodeValue;
+
   $count = 1;
   while ($token) {
     $new_url = $base_url . $token;
@@ -292,39 +413,40 @@ function drush_agile_lcp_agile_OAI_prep_batch() {
     $resumption_tokens = $sub_dom->getElementsByTagName('resumptionToken');
     if ($resumption_tokens->length > 0) {
       $count++;
-      $resumption_node = $sub_dom->getElementsByTagName('resumptionToken')->item(0);
+      $resumption_node = $sub_dom->getElementsByTagName('resumptionToken')
+        ->item(0);
       $token = $resumption_node->nodeValue;
       agile_lcp_add_token($token);
-      if ($count % 10 == 0) {
+      //if ($count % 10 == 0) {
         drush_print('.', 0, NULL, FALSE);
-      }
+      //}
     }
   }
   drush_print(dt("\n Complete."));
 }
 
 /**
- * Gets all collection pids for resource index.
+ * Gets all pids from resource index and puts them in database.
  */
 function drush_agile_lcp_agile_get_collection_pids() {
   $result = db_select('collection_pids', 'cp')
-      ->fields('cp')
-      ->execute();
+    ->fields('cp')
+    ->execute();
   $count = $result->rowCount();
   drush_print("$count in database table - start");
   $limit = drush_get_option('limit', 1000);
   $iterations = drush_get_option('iterations', 1);
   $tuque = new IslandoraTuque();
   for ($i = 0; $i < $iterations; $i++) {
-    $offset = ($i * $limit) + $count;
+    $offset = ($i * $limit);
     $query = <<<EOQ
 PREFIX fm: <info:fedora/fedora-system:def/model#>
-SELECT  ?pid 
+SELECT  distinct ?s 
 FROM <RISEARCH>
 WHERE
 {
-      ?pid  <fedora-rels-ext:isMemberOfCollection> <info:fedora/islandora:imported_oai>
-
+      ?s  fm:state fm:Active .
+      ?s fm:hasModel ?o
  }
         limit  $limit
         offset  $offset
@@ -335,29 +457,32 @@ EOQ;
       break;
     }
     foreach ($results as $result) {
-      $nid = db_insert('collection_pids')
-          ->fields(array(
-            'pid' => $result['pid']['value'],
-            'indexed' => 0,
-          ))
-          ->execute();
+      $pid = $result['s']['value'];
+      drush_print($pid);
+      $nid = db_merge('collection_pids')
+        ->key(['pid' => $pid])
+        ->fields([
+          'pid' => $pid,
+          'indexed' => 0,
+        ])
+        ->execute();
     }
   }
   $result = db_select('collection_pids', 'cp')
-      ->fields('cp')
-      ->execute();
+    ->fields('cp')
+    ->execute();
   $count = $result->rowCount();
   drush_print("$count in database table - end");
 }
 
 /**
- * One time funciton to remove processed PIDS from database table.
+ * One time function to remove processed PIDS from database table.
  */
 function drush_agile_lcp_agile_remove_indexed_collection_pids() {
   $result = db_select('collection_pids', 'cp')
-      ->fields('cp')
-      ->condition('indexed', 0)
-      ->execute();
+    ->fields('cp')
+    ->condition('indexed', 0)
+    ->execute();
   $count = $result->rowCount();
   drush_print("$count unindexed in database table - start");
   $file = "/tmp/collectionPIDS.txt";
@@ -366,10 +491,10 @@ function drush_agile_lcp_agile_remove_indexed_collection_pids() {
     while (($line = fgets($handle)) !== FALSE) {
       $pid = trim($line);
       $query = db_update('collection_pids')
-              ->condition('pid', $pid)
-              ->fields(array(
-                'indexed' => 1,
-              ))->execute();
+        ->condition('pid', $pid)
+        ->fields([
+          'indexed' => 1,
+        ])->execute();
     }
 
     fclose($handle);
@@ -378,9 +503,127 @@ function drush_agile_lcp_agile_remove_indexed_collection_pids() {
     drush_print("Could not open file");
   }
   $result = db_select('collection_pids', 'cp')
-      ->fields('cp')
-      ->condition('indexed', 0)
-      ->execute();
+    ->fields('cp')
+    ->condition('indexed', 0)
+    ->execute();
   $count = $result->rowCount();
   drush_print("$count unindexed in database table - end");
+}
+
+function drush_agile_lcp_solr_reindex() {
+  $iterations = drush_get_option('iterations', 1);
+  drush_print($iterations);
+  for ($i = 1; $i <= $iterations; $i++) {
+    $start = microtime(TRUE);
+    $results = db_select('collection_pids', 'cp')
+      ->fields('cp')
+      ->condition('indexed', 0)
+      ->range(0, 1000)
+      ->execute()
+      ->fetchAll();
+    if (!$results) {
+      drush_print("All pids have been indexed");
+      break;
+    }
+    foreach ($results as $result) {
+      $pid = $result->PID;
+      $curl = curl_init();
+      $url = "http://localhost:8080/fedoragsearch/rest?operation=updateIndex&action=fromPid&value=$pid";
+      curl_setopt_array($curl, [
+        CURLOPT_RETURNTRANSFER => 1,
+        CURLOPT_URL => $url,
+        //CURLOPT_USERPWD => 'fedoraAdmin:DXhn8eg4zU6Z6NgA',
+        CURLOPT_USERPWD => 'fedoraAdmin:fedoraAdmin',
+      ]);
+      $success = curl_exec($curl);
+      curl_close($curl);
+      if ($success != FALSE) {
+        $num_updated = db_update('collection_pids')
+          ->fields([
+            'indexed' => 1,
+
+          ])
+          ->condition('pid', $pid)
+          ->execute();
+      }
+      else {
+        drush_print("Failure on $pid");
+      }
+    }
+    drush_print(microtime(TRUE) - $start);
+  }
+
+}
+
+function drush_agile_lcp_mark_solr_pids() {
+  $query = '*:*';
+  $limit = 4000;
+  $start = 0;
+  for ($i = 0; $i < 86; $i++) {
+    $qp = new IslandoraSolrQueryProcessor();
+    $qp->buildQuery('*:*');
+    $qp->solrParams['fq'] = $query;
+    $qp->solrStart = $start;
+    $qp->solrParams['fl'] = 'PID';
+    $qp->solrLimit = $limit;
+    $qp->executeQuery(FALSE);
+    $objects = $qp->islandoraSolrResult['response']['objects'];
+    if ($objects) {
+      foreach ($objects as $object) {
+        $pid = $object['PID'];
+        $num_updated = db_update('collection_pids')
+          ->fields([
+            'indexed' => 1,
+          ])
+          ->condition('pid', $pid)
+          ->execute();
+      }
+      drush_print("Batch $start completed.");
+      $start = $start + $limit;
+    }
+  }
+}
+
+/**
+ * One time function to remove OAI duplicated functions
+ */
+function drush_agile_lcp_remove_duplicates() {
+  drush_print("Removing duplicates...");
+  module_load_include('inc', 'agile_lcp', 'includes/utilities');
+  $duplicate_identifiers = agile_lcp_get_duplicates();
+  $total = count($duplicate_identifiers);
+  drush_print("$total found");
+  foreach ($duplicate_identifiers as $identifier) {
+    $pids_to_delete = [];
+    $oai_only = TRUE;
+    $query_processor = new IslandoraSolrQueryProcessor();
+    $query_processor->solrQuery = "mods_recordInfo_recordIdentifier_s:$identifier";
+    $query_processor->solrStart = 0;
+    $query_processor->solrLimit = 100;
+    $query_processor->solrParams = [
+      'fl' => "PID RELS_EXT_hasModel_uri_s",
+    ];
+    $query_processor->executeQuery(FALSE);
+    $solr_results = $query_processor->islandoraSolrResult;
+
+    if ($solr_results['response']['objects']) {
+      foreach ($solr_results['response']['objects'] as $object) {
+
+        if ($object['solr_doc']['RELS_EXT_hasModel_uri_s'] == 'info:fedora/islandora:oai_importCModel') {
+          $pids_to_delete[] = $object['PID'];
+        }
+        else {
+          $oai_only = FALSE;
+        }
+      }
+      if ($oai_only) {
+        array_shift($pids_to_delete);
+      }
+      foreach ($pids_to_delete as $pid) {
+        $obj = islandora_object_load($pid);
+        drush_print("Deleting $obj->id");
+        $obj->delete();
+      }
+    }
+  }
 }
