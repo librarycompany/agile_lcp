@@ -18,6 +18,7 @@
  */
 function agile_lcp_admin_settings_form(array $form, array &$form_state) {
   $search_node = variable_get('agile_lcp_search_node_id', '31');
+  $dropbox_api = variable_get('lcpdora_dropbox_token', '');
   if ($search_node) {
     $form['about'] = array(
       '#type' => 'markup',
@@ -30,6 +31,13 @@ function agile_lcp_admin_settings_form(array $form, array &$form_state) {
     '#description' => t("The Drupal node containing the page code for search"),
     '#default_value' => $search_node,
     '#size' => 5,
+  );
+  $form['lcpdora_dropbox_token'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Dropbox API Access Token'),
+    '#description' => t("Access token for Dropbox account containing the object bags"),
+    '#default_value' => $dropbox_api,
+    '#size' => 100,
   );
   return system_settings_form($form);
 }

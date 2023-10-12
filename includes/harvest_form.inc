@@ -145,10 +145,10 @@ function agile_lcp_build_object($identifier) {
 function agile_lcp_import_oai($token_id = FALSE, $token = FALSE) {
   module_load_include('inc', 'agile_lcp', 'includes/db');
   if ($token) {
-    $url = "http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&resumptionToken=$token";
+    $url = "https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&resumptionToken=$token";
   }
   else {
-    $url = 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21';
+    $url = 'https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&metadataPrefix=marc21';
   }
   $input = file_get_contents($url);
   $dom = new DOMDocument();

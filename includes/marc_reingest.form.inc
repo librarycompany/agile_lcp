@@ -11,9 +11,9 @@ function agile_reingest_marc_form(array $form, array $form_state, AbstractObject
   module_load_include('inc', 'agile_lcp', 'includes/utilities');
   $identifier = agile_lcp_get_identifier_from_marc($object);
   $form['identifier'] = array(
-    '#title' => t('Update MarcXML from Aleph'),
+    '#title' => t('Update MarcXML from Koha'),
     '#type' => 'textfield',
-    '#description' => t('9 digit record identifier'),
+    '#description' => t('Biblio number'),
     '#default_value' => $identifier,
 
   );
@@ -32,7 +32,7 @@ function agile_reingest_marc_form_submit(array $form, array $form_state) {
   module_load_include('inc', 'agile_lcp', 'includes/utilities');
   $object = islandora_object_load($form_state['build_info']['args'][0]->id);
   $identifier = $form_state['values']['identifier'];
-  $identifier = str_pad($identifier, 9, 0,STR_PAD_LEFT);
+  // $identifier = str_pad($identifier, 9, 0,STR_PAD_LEFT);
   agile_update_marcXML($object, $identifier);
   drupal_goto("/islandora/object/{$object->id}/manage/datastreams");
 

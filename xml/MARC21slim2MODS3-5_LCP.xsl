@@ -2910,6 +2910,14 @@
                     <xsl:value-of select="."/>
                 </recordChangeDate>
             </xsl:for-each>
+            <xsl:for-each select="marc:datafield[@tag=999]">
+            	<xsl:if test="marc:subfield[@code='c']">
+            		<recordIdentifier>
+	            		<xsl:value-of select="marc:subfield[@code='c']"/>
+	            	</recordIdentifier>
+            	</xsl:if>
+            </xsl:for-each>
+            <!--
             <xsl:for-each select="marc:controlfield[@tag=001]">
                 <recordIdentifier>
                     <xsl:if test="../marc:controlfield[@tag=003]">
@@ -2920,8 +2928,9 @@
                     <xsl:value-of select="."/>
                 </recordIdentifier>
             </xsl:for-each>
+        	-->
 
-            <recordOrigin>Imported From OAI</recordOrigin>
+            <recordOrigin>Imported from Koha via OAI</recordOrigin>
 
             <xsl:for-each select="marc:datafield[@tag=040]/marc:subfield[@code='b']">
                 <languageOfCataloging>

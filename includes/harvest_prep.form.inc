@@ -38,7 +38,7 @@ function agile_lcp_prep_harvest($form, $form_state) {
   $form['url'] = array(
     '#type' => 'textfield',
     '#title' => t('URL to initiate harvest'),
-    '#default_value' => 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21',
+    '#default_value' => 'https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&metadataPrefix=marc21',
     '#size' => 90,
   );
   $form['from'] = array(
@@ -68,7 +68,7 @@ function agile_lcp_prep_harvest($form, $form_state) {
  */
 function agile_lcp_prep_harvest_submit($form, $form_state) {
   module_load_include('inc', 'agile_lcp', 'includes/db');
-  $url = 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21';
+  $url = 'https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&metadataPrefix=marc21';
   if ($form_state['values']['from'] != '') {
     $url .= "&from=" . $form_state['values']['from'];
   }

@@ -54,9 +54,9 @@ function build_full_dom($url) {
 
 function agile_get_streams_from_entry($identifier) {
   // Remove OAI qualifier from MARC identifier.
-  $identifier = preg_replace('/oai:pacscl.hosted.exlibrisgroup.com:LCP01-/', '', $identifier);
+  $identifier = preg_replace('/oai:librarycompany.org:/', '', $identifier);
   module_load_include('inc', 'islandora_marcxml', 'includes/utilities');
-  $url = "http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=GetRecord&identifier=oai:pacscl.hosted.exlibrisgroup.com:LCP01-$identifier&metadataPrefix=marc21";
+  $url = "https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=GetRecord&identifier=oai:librarycompany.org:$identifier&metadataPrefix=marc21";
   $marc_NS = "http://www.loc.gov/MARC21/slim";
   $input = file_get_contents($url);
   $dom = new DOMDocument();
@@ -109,7 +109,7 @@ function agile_lcp_run_xsl_transform($info) {
  */
 function agile_lcp_get_pids_from_identifier($identifier, $oai_only = FALSE) {
   // Remove OAI qualifier from MARC identifier.
-  $identifier = preg_replace('/oai:pacscl.hosted.exlibrisgroup.com:LCP01-/', '', $identifier);
+  $identifier = preg_replace('/oai:librarycompany.org:/', '', $identifier);
   $pids = [];
   if (!is_numeric($identifier)) {
     drush_print(" Identifier $identifier is not numeric.");
@@ -286,11 +286,23 @@ function agile_lcp_get_identifier_from_marc(AbstractObject $object) {
   $dom->loadXML($marc);
   $xpath = new DOMXPath($dom);
   $xpath->registerNamespace('marc', "http://www.loc.gov/MARC21/slim");
-  $query = "//marc:controlfield[@tag = '001']";
+
+  // new identifier from Koha is in 999$c
+  $query = "//marc:datafield[@tag='999']/marc:subfield[@code='c']";
   $identifiers = $xpath->query($query);
   if ($identifiers->length) {
     return $identifiers->item(0)->nodeValue;
   }
+  else {
+
+    // if no new identifier, we've got an old MARC, so fetch it from the 001
+    $query = "//marc:controlfield[@tag = '001']";
+    $identifiers = $xpath->query($query);
+    if ($identifiers->length) {
+      return $identifiers->item(0)->nodeValue;
+    }
+  }
+
   return NULL;
 }
 

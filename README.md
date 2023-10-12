@@ -14,7 +14,7 @@ Building the collection is a two-step process.  First, resumption tokens are har
 2. Sudo to the root user: `sudo bash`
 3. Navigate to your Drupal installation: `cd /var/www/drupal7/`
 4. To initialize the harvest type `drush -u 1 OAI_Prep` at the command line.  You will see a progressive dotted line indicating the rate at which resumption tokens are being recorded.  You'll receive a printed message when the harvesting is complete. Each token contains about 25 records.
-5. To harvest tokens type `drush -u 1 OAI` to harvest a single token, or `drush -u 1 OAI limit=100` to harvest a larger group. Limit can be any reasonable number up to about 500. For update harvests, there may only be a couple tokens, so `limit=100` will cover it.
+5. To harvest tokens type `drush -u 1 OAI` to harvest a single token, or `drush -u 1 OAI --limit=100` to harvest a larger group. Limit can be any reasonable number up to about 500. For update harvests, there may only be a couple tokens, so `limit=100` will cover it.
 
 **Additional Functionality**
 

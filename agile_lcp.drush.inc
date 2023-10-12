@@ -46,7 +46,7 @@ function agile_lcp_drush_command() {
     'description' => dt('Harvests one record from the OAI source.'),
     'options' => [
       'identifier' => [
-        'description' => dt('The system number of the MARC record to harvest from OIA.'),
+        'description' => dt('The Koha Biblio Number of the MARC record to harvest from OIA.'),
         'required' => TRUE,
       ],
     ],
@@ -55,7 +55,7 @@ function agile_lcp_drush_command() {
       'islandora',
     ],
     'examples' => [
-      'drush -u 1 OAI_1 --identifier=000197559'
+      'drush -u 1 OAI_1 --identifier=197559'
     ]
   ];
 
@@ -64,7 +64,7 @@ function agile_lcp_drush_command() {
     'options' => [
       'url' => [
         'value' => 'optional',
-        'description' => dt("The url to initiate harvesting.  Defaults to 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21'"),
+        'description' => dt("The url to initiate harvesting.  Defaults to 'https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&metadataPrefix=marc21'"),
       ],
       'reset' => [
         'description' => dt("Set to 1 if you want to restart the harvest using the parameters; otherwise the harvest will continue where it last left off."),
@@ -223,11 +223,11 @@ function drush_agile_lcp_agile_OAI_harvest_batch() {
 function agile_lcp_add_OAI_batch_worker($token_id = NULL, $token = NULL, &$context) {
   drush_print('.', 0, NULL, FALSE);
   if ($token) {
-    $url = "http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&resumptionToken=$token";
+    $url = "https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&resumptionToken=$token";
   }
   else {
     drush_print(dt("First run."));
-    $url = 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21';
+    $url = 'https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&metadataPrefix=marc21';
   }
   $input = file_get_contents($url);
   $dom = new DOMDocument();
@@ -269,14 +269,33 @@ function agile_lcp_add_OAI_batch_worker($token_id = NULL, $token = NULL, &$conte
  *   Unique OAI identifier
  */
 function agile_lcp_drush_build_object(string $identifier) {
-  drush_print('.', 0, NULL, FALSE);
+  drush_print('Loading ' . $identifier);
   module_load_include('inc', 'agile_lcp', 'includes/utilities');
 
   $streams = agile_get_streams_from_entry($identifier);
   $existing = agile_lcp_get_pids_from_identifier($identifier);
+
+  // since Koha updates, main identifier is the Koha biblio number
+  // try finding a matching record using the 001 control number
+  $marc = $streams['MARC'];
+  $dom = new DOMDocument();
+  $dom->loadXML($marc);
+  $xpath = new DOMXPath($dom);
+  $xpath->registerNamespace('marc', "http://www.loc.gov/MARC21/slim");
+
+  $query = "//marc:controlfield[@tag = '001']";
+  $identifiers = $xpath->query($query);
+  if ($identifiers->length) {
+    $old_identifier = $identifiers->item(0)->nodeValue;
+  } else {
+    $old_identifier = '999999999';
+  }
+  
+  $existing2 = agile_lcp_get_pids_from_identifier($old_identifier);
+
   // Streams are not returned if OAI record has been deleted.
   if (!$streams) {
-    if(!$existing) {
+    if(!$existing && !$existing2) {
       drush_print(" Record $identifier has deleted status.  Not added");
     }
     else {
@@ -299,11 +318,27 @@ function agile_lcp_drush_build_object(string $identifier) {
           $object[$dsid]->content = $content;
         }
       }
+      drush_print("Updated $pid.  Identifier = $identifier");
     }
-    drush_print("Updated $pid.  Identifier = $identifier");
+    if (!$existing2) return;
+  }
+
+  if ($existing2 ) {
+    foreach ($existing2 as $pid) {
+      $object = islandora_object_load($pid);
+      foreach ($streams as $dsid => $content) {
+        if ($object[$dsid]) {
+          $object[$dsid]->content = $content;
+        }
+      }
+      drush_print("Updated $pid.  Identifier = $identifier");
+    }
     return;
   }
 
+  /* Discover layer is disabled, so don't add any new records */
+
+  /*
   $tuque = new IslandoraTuque();
   $repository = $tuque->repository;
   $object = $repository->constructObject('islandora');
@@ -335,6 +370,7 @@ function agile_lcp_drush_build_object(string $identifier) {
   } catch (Exception $ex) {
     drush_print("Failed to ingest $identifier");
   }
+  */
 }
 
 /**
@@ -370,7 +406,7 @@ function agile_lcp_drush_mark_token($token_id, $token) {
 function drush_agile_lcp_agile_OAI_prep_batch() {
   drush_print(dt("Adding to database -"));
   module_load_include('inc', 'agile_lcp', 'includes/db');
-  $url = drush_get_option('url', 'http://pacscl.hosted.exlibrisgroup.com:48992/OAI?verb=ListIdentifiers&set=OAI-SET&metadataPrefix=marc21');
+  $url = drush_get_option('url', 'https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&metadataPrefix=marc21');
   $to = drush_get_option('to', FALSE);
   $from = drush_get_option('from', FALSE);
   $reset = drush_get_option('reset', FALSE);
@@ -532,8 +568,8 @@ function drush_agile_lcp_solr_reindex() {
       curl_setopt_array($curl, [
         CURLOPT_RETURNTRANSFER => 1,
         CURLOPT_URL => $url,
-        //CURLOPT_USERPWD => 'fedoraAdmin:DXhn8eg4zU6Z6NgA',
-        CURLOPT_USERPWD => 'fedoraAdmin:fedoraAdmin',
+        CURLOPT_USERPWD => 'fedoraAdmin:DXhn8eg4zU6Z6NgA',
+        //CURLOPT_USERPWD => 'fedoraAdmin:fedoraAdmin',
       ]);
       $success = curl_exec($curl);
       curl_close($curl);
