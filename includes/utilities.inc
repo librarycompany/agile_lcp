@@ -67,11 +67,11 @@ function agile_get_streams_from_entry($identifier) {
   }
   $record_node = $dom->getElementsByTagNameNS($marc_NS, 'record')->item(0);
   $marc_record = $dom->saveXML($record_node);
-  $mods_record = trim(agile_lcp_transform_with_saxonb('MARC21slim2MODS3-5_LCP.xsl', $marc_record));
-  $dc_record = trim(agile_lcp_transform_with_saxonb('marc_to_dc.xsl', $marc_record));
+  //$mods_record = trim(agile_lcp_transform_with_saxonb('MARC21slim2MODS3-5_LCP.xsl', $marc_record));
+  //$dc_record = trim(agile_lcp_transform_with_saxonb('marc_to_dc.xsl', $marc_record));
   return [
-    'MODS' => $mods_record,
-    'DC' => $dc_record,
+    //'MODS' => $mods_record,
+    //'DC' => $dc_record,
     'MARC' => $marc_record,
   ];
 
@@ -119,7 +119,7 @@ function agile_lcp_get_pids_from_identifier($identifier, $oai_only = FALSE) {
   $query_processor = new IslandoraSolrQueryProcessor();
   $query_processor->solrQuery = "+mods_recordInfo_recordIdentifier_s:$identifier $qualifier";
   $query_processor->solrStart = 0;
-  $query_processor->solrLimit = 10;
+  $query_processor->solrLimit = 50;
 
   $query_processor->solrParams = [
     'fl' => "PID",

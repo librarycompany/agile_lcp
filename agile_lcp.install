@@ -38,6 +38,11 @@ function agile_lcp_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'rundate' => array(
+        'type' => 'varchar',
+        'not null' => FALSE,
+        'length' => '10',
+      )
     ),
     'primary key' => array('token_id'),
   );
@@ -61,3 +66,5 @@ function agile_lcp_schema() {
   );
   return $schema;
 }
+
+

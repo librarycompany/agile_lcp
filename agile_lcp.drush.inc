@@ -28,10 +28,6 @@ function agile_lcp_drush_command() {
         'description' => dt('The number of batches to process.  Defaults to 1'),
         'required' => FALSE,
       ],
-      'new' => [
-        'description' => dt('Whether this is the first run of the harvest, Defaults to FALSE'),
-        'required' => FALSE,
-      ],
     ],
     'aliases' => ['OAI'],
     'drupal dependencies' => [
@@ -177,18 +173,6 @@ function drush_agile_lcp_agile_OAI_harvest_batch() {
   module_load_include('inc', 'agile_lcp', 'includes/db');
   $batch = [];
   $limit = drush_get_option('limit', 1);
-  $new = drush_get_option('new', FALSE);
-
-  if ($new) {
-    $limit--;
-    $batch['operations'][] = [
-      'agile_lcp_add_OAI_batch_worker',
-      [
-        'token_id' => NULL,
-        'token' => NULL,
-      ],
-    ];
-  }
 
   $tokens = agile_lcp_get_unproccessed_tokens($limit);
   $count = count($tokens);
@@ -222,18 +206,36 @@ function drush_agile_lcp_agile_OAI_harvest_batch() {
  */
 function agile_lcp_add_OAI_batch_worker($token_id = NULL, $token = NULL, &$context) {
   drush_print('.', 0, NULL, FALSE);
+
   if ($token) {
-    $url = "https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&resumptionToken=$token";
+    $url = "https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&$token";
   }
   else {
     drush_print(dt("First run."));
     $url = 'https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&metadataPrefix=marc21';
   }
+
   $input = file_get_contents($url);
   $dom = new DOMDocument();
   $dom->loadXML($input);
   $new_identifiers = $dom->getElementsByTagName('identifier');
 
+  // previously processed each update in the token as a batch operation
+  // super slow, so doing it directly
+
+  agile_lcp_batch_notifier($token_id, $token);
+
+  foreach ($new_identifiers as $new_identifier) {
+    agile_lcp_drush_build_object($new_identifier->nodeValue);
+  }
+
+  if ($token) {
+    agile_lcp_drush_mark_token($token_id, $token);
+  }
+
+  // here's the code for the batch operations if needed
+
+  /*
   $batch = [];
   $batch['operations'][] = [
     'agile_lcp_batch_notifier',
@@ -260,6 +262,7 @@ function agile_lcp_add_OAI_batch_worker($token_id = NULL, $token = NULL, &$conte
     ];
   }
   batch_set($batch);
+  */
 }
 
 /**
@@ -275,28 +278,10 @@ function agile_lcp_drush_build_object(string $identifier) {
   $streams = agile_get_streams_from_entry($identifier);
   $existing = agile_lcp_get_pids_from_identifier($identifier);
 
-  // since Koha updates, main identifier is the Koha biblio number
-  // try finding a matching record using the 001 control number
-  $marc = $streams['MARC'];
-  $dom = new DOMDocument();
-  $dom->loadXML($marc);
-  $xpath = new DOMXPath($dom);
-  $xpath->registerNamespace('marc', "http://www.loc.gov/MARC21/slim");
-
-  $query = "//marc:controlfield[@tag = '001']";
-  $identifiers = $xpath->query($query);
-  if ($identifiers->length) {
-    $old_identifier = $identifiers->item(0)->nodeValue;
-  } else {
-    $old_identifier = '999999999';
-  }
-  
-  $existing2 = agile_lcp_get_pids_from_identifier($old_identifier);
-
   // Streams are not returned if OAI record has been deleted.
   if (!$streams) {
-    if(!$existing && !$existing2) {
-      drush_print(" Record $identifier has deleted status.  Not added");
+    if(!$existing) {
+      drush_print(" Record $identifier has deleted status.  Not added.");
     }
     else {
       // Remove current OAI records, if record has been deleted since original ingest.
@@ -310,21 +295,8 @@ function agile_lcp_drush_build_object(string $identifier) {
     return;
   }
 
-  if ($existing ) {
+  if ($existing) {
     foreach ($existing as $pid) {
-      $object = islandora_object_load($pid);
-      foreach ($streams as $dsid => $content) {
-        if ($object[$dsid]) {
-          $object[$dsid]->content = $content;
-        }
-      }
-      drush_print("Updated $pid.  Identifier = $identifier");
-    }
-    if (!$existing2) return;
-  }
-
-  if ($existing2 ) {
-    foreach ($existing2 as $pid) {
       $object = islandora_object_load($pid);
       foreach ($streams as $dsid => $content) {
         if ($object[$dsid]) {
@@ -338,7 +310,7 @@ function agile_lcp_drush_build_object(string $identifier) {
 
   /* Discover layer is disabled, so don't add any new records */
 
-  /*
+  /* ---------------------------------------------
   $tuque = new IslandoraTuque();
   $repository = $tuque->repository;
   $object = $repository->constructObject('islandora');
@@ -370,7 +342,7 @@ function agile_lcp_drush_build_object(string $identifier) {
   } catch (Exception $ex) {
     drush_print("Failed to ingest $identifier");
   }
-  */
+  --------------------------------------------------- */
 }
 
 /**
@@ -392,56 +364,61 @@ function agile_lcp_batch_notifier($token_id, $token) {
  *   Token being updated
  */
 function agile_lcp_drush_mark_token($token_id, $token) {
+
   drush_print("$token_id complete.");
   $query = db_update('resumption_token')
-    ->condition('token', $token)
+    ->condition('token_id', $token_id)
     ->fields([
       'processed' => 1,
     ])->execute();
+
 }
 
 /**
  * Adds all tokens from supplied URL to prepare for harvesting.
  */
 function drush_agile_lcp_agile_OAI_prep_batch() {
+
   drush_print(dt("Adding to database -"));
   module_load_include('inc', 'agile_lcp', 'includes/db');
-  $url = drush_get_option('url', 'https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&metadataPrefix=marc21');
-  $to = drush_get_option('to', FALSE);
-  $from = drush_get_option('from', FALSE);
-  $reset = drush_get_option('reset', FALSE);
-  if ($to) {
-    $url .= "&to=$to";
-  }
-  if ($from) {
-    $url .= "&from=$from";
-  }
-  set_time_limit(0);
-  $url_parts = explode('?', $url);
-  $base_url = $url_parts[0] . "?verb=ListIdentifiers&resumptionToken=";
 
-  if ($reset == '1') {
-    // Load the initial URL to get the first resumption token; note that this doesn't process the first set of records!
-    $data = file_get_contents($url);
-    if (!$data) {
-      drush_print(dt("No results returned - please check url and login credentials"));
-      return;
+  $url = drush_get_option('url', 'https://librarycompany.kohacatalog.com/cgi-bin/koha/oai.pl?verb=ListIdentifiers&');
+  $reset = drush_get_option('reset', FALSE);
+
+  set_time_limit(0);
+
+  if ($reset == '1') 
+  {
+    // set the initial token to load the first set of records
+    $token = 'metadataPrefix=marc21';
+    
+    $to = drush_get_option('to', FALSE);
+    $from = drush_get_option('from', FALSE);
+
+    if ($to) {
+      $token .= "&to=$to";
     }
-    $dom = new DOMDocument();
-    $dom->loadXML($data);
-    $resumption_node = $dom->getElementsByTagName('resumptionToken')->item(0);
-    $token = $resumption_node ? $resumption_node->nodeValue : NULL;
-  } else {
-    // get the last resumption token from the database
-    $token = agile_lcp_get_last_processed_token();
-    // need to reprocess this token, because it could have additional records in this set
+    if ($from) {
+      $token .= "&from=$from";
+    }
+
     agile_lcp_add_token($token);
-    drush_print("Resuming from last token in database: $token.");
+  } 
+  else 
+  {
+    // make a new initial token based on last run date
+    $token = 'metadataPrefix=marc21';
+    $from = agile_lcp_get_last_rundate();
+    if ($from) {
+      $token .= "&from=$from";
+    }
+    agile_lcp_add_token($token);
+    drush_print("Resuming from last run date in database: $token.");
   }
 
   $count = 1;
   while ($token) {
-    $new_url = $base_url . $token;
+    $new_url = $url . $token;
     $token = NULL;
     $data = file_get_contents($new_url);
     $sub_dom = new DOMDocument();
@@ -449,13 +426,10 @@ function drush_agile_lcp_agile_OAI_prep_batch() {
     $resumption_tokens = $sub_dom->getElementsByTagName('resumptionToken');
     if ($resumption_tokens->length > 0) {
       $count++;
-      $resumption_node = $sub_dom->getElementsByTagName('resumptionToken')
-        ->item(0);
-      $token = $resumption_node->nodeValue;
+      $resumption_node = $sub_dom->getElementsByTagName('resumptionToken')->item(0);
+      $token = 'resumptionToken=' . $resumption_node->nodeValue;
       agile_lcp_add_token($token);
-      //if ($count % 10 == 0) {
-        drush_print('.', 0, NULL, FALSE);
-      //}
+      drush_print('.', 0, NULL, FALSE);
     }
   }
   drush_print(dt("\n Complete."));

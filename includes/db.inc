@@ -15,6 +15,7 @@ function agile_lcp_add_token($token) {
       ->fields(array(
         'token' => $token,
         'processed' => 0,
+        'rundate' => date("Y-m-d", time()),
       ))
       ->execute();
 }
@@ -63,6 +64,22 @@ function agile_lcp_get_last_processed_token() {
       ->range(0,1);
   $token = $query->execute()->fetchField();
   return $token;
+}
+
+/**
+ * Get last proccessed token.
+ *
+ * @return string
+ *   token
+ */
+function agile_lcp_get_last_rundate() {
+  $query = db_select('resumption_token', 'rt')
+      ->condition('processed', 1)
+      ->fields('rt', array('rundate'))
+      ->orderBy('token_id', 'DESC')
+      ->range(0,1);
+  $rundate = $query->execute()->fetchField();
+  return $rundate;
 }
 
 /**
